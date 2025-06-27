@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listen, Read and Spell</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffebf3;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: Arial, sans-serif;
+            font-size: 30px;
+            font-weight: bold;
+            color: #ff6b9d;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            font-family: Arial, sans-serif;
+            font-size: 28px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #report-btn {
+            background-color: #ffb6d9;
+            color: white;
+        }
+
+        #input-btn {
+            background-color: #d9b6ff;
+            color: white;
+        }
+
+        #hint-btn {
+            background-color: #a8e6ff;
+            color: white;
+        }
+
+        .word-card {
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        .play-button {
+            font-size: 38px;
+            color: #ff6b9d;
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin: 0 auto 20px;
+            padding: 0;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .meaning {
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 34px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .pos {
+            font-family: "Times New Roman", serif;
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .phonics {
+            font-family: Arial, sans-serif;
+            font-size: 38px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            visibility: hidden;
+            height: 45px;
+        }
+
+        .phonics.show {
+            visibility: visible;
+        }
+
+        .phonics.show .vowel {
+            color: #ff6b9d;
+        }
+
+        .phonics.show .consonant {
+            color: #4da6ff;
+        }
+
+        .phonics.show .hyphen {
+            color: #4CAF50;
+        }
+
+        .spelling-area {
+            width: 100%;
+            margin: 20px 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .letter-line {
+            height: 2px;
+            background-color: #ff9ec6;
+            margin: 0 auto 50px;
+            width: 90%;
+            position: relative;
+        }
+
+        .selected-letters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            min-height: 60px;
+            align-items: flex-end;
+        }
+
+        .letter-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .letter {
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border: 2px solid #a8e6ff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            color: #5a5a5a;
+        }
+
+        .letter:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            background-color: #f0f9ff;
+        }
+
+        .selected-letter {
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            width: 50px;
+            height: 50px;
+            background-color: white;
+            border: 2px solid #ffb6d9;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            color: #5a5a5a;
+        }
+
+        .feedback {
+            font-size: 50px;
+            margin: 20px 0;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .flash {
+            animation: flash 0.5s;
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal-title {
+            font-family: Arial, sans-serif;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff6b9d;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-item {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background-color: #ff6b9d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 18px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #ff6b9d;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #d9b6ff;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Listen, Read and Spell</h1>
+        
+        <div class="button-container">
+            <div>
+                <button id="report-btn" class="button">Report</button>
+                <button id="input-btn" class="button">Input</button>
+            </div>
+            <button id="hint-btn" class="button">Hint</button>
+        </div>
+        
+        <div class="word-card">
+            <button class="play-button" id="play-btn">▶︎</button>
+            <div class="meaning" id="meaning"></div>
+            <div class="pos" id="pos"></div>
+            <div class="phonics" id="phonics"></div>
+        </div>
+        
+        <div class="spelling-area">
+            <div class="selected-letters" id="selected-letters"></div>
+            <div class="letter-line" id="letter-line"></div>
+            <div class="letter-container" id="letter-container"></div>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+    
+    <div class="modal" id="report-modal">
+        <div class="modal-content">
+            <div class="modal-title">Result</div>
+            <div class="modal-item" id="date"></div>
+            <div class="modal-item">Words completed: <span id="completed-words">0</span>/<span id="total-words-count">0</span></div>
+            <div class="modal-item">Words to review: <span id="review-words"></span></div>
+            <button class="close-btn" id="close-btn">Close</button>
+        </div>
+    </div>
+
+    <div class="progress-container" id="progress-container">
+        <div class="progress-content">
+            <div class="modal-title">Importing Words</div>
+            <div id="progress-text">0%</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+    <label for="file-input" id="file-label" class="file-label" style="display:none;">Choose Excel File</label>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Word data
+        let wordPool = [
+            { word: "hippo", phonic: "hip-po", pos: "n.", meaning: "河馬" },
+            { word: "elephant", phonic: "el-e-phant", pos: "n.", meaning: "大象" },
+            { word: "lion", phonic: "li-on", pos: "n.", meaning: "獅子" },
+            { word: "zebra", phonic: "ze-bra", pos: "n.", meaning: "斑馬" },
+            { word: "snake", phonic: "snake", pos: "n.", meaning: "蛇" },
+            { word: "monkey", phonic: "mon-key", pos: "n.", meaning: "猴子" },
+            { word: "kangaroo", phonic: "kan-ga-roo", pos: "n.", meaning: "袋鼠" },
+            { word: "panda", phonic: "pan-da", pos: "n.", meaning: "熊貓" },
+            { word: "penguin", phonic: "pen-guin", pos: "n.", meaning: "企鵝" },
+            { word: "tiger", phonic: "ti-ger", pos: "n.", meaning: "老虎" }
+        ];
+
+        // Game state
+        let words = [];
+        let remainingWords = [];
+        let currentWordIndex = 0;
+        let selectedLetters = [];
+        let wordsToReview = [];
+        let completedWordsCount = 0;
+        let currentWord = null;
+        let audio = new Audio();
+        let correctAudio = new Audio("https://dict.youdao.com/dictvoice?type=0&audio=great");
+        let wrongAudio = new Audio("https://dict.youdao.com/dictvoice?type=0&audio=oh%20no");
+
+        // DOM elements
+        const playBtn = document.getElementById('play-btn');
+        const meaningEl = document.getElementById('meaning');
+        const posEl = document.getElementById('pos');
+        const phonicsEl = document.getElementById('phonics');
+        const selectedLettersEl = document.getElementById('selected-letters');
+        const letterLine = document.getElementById('letter-line');
+        const letterContainer = document.getElementById('letter-container');
+        const feedbackEl = document.getElementById('feedback');
+        const reportBtn = document.getElementById('report-btn');
+        const inputBtn = document.getElementById('input-btn');
+        const hintBtn = document.getElementById('hint-btn');
+        const reportModal = document.getElementById('report-modal');
+        const dateEl = document.getElementById('date');
+        const completedWordsEl = document.getElementById('completed-words');
+        const totalWordsCountEl = document.getElementById('total-words-count');
+        const reviewWordsEl = document.getElementById('review-words');
+        const closeBtn = document.getElementById('close-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const fileInput = document.getElementById('file-input');
+        const fileLabel = document.getElementById('file-label');
+
+        // Load saved words from localStorage
+        function loadSavedWords() {
+            const savedWords = localStorage.getItem('wordPool');
+            if (savedWords) {
+                wordPool = JSON.parse(savedWords);
+            }
+            const savedReview = localStorage.getItem('wordsToReview');
+            if (savedReview) {
+                wordsToReview = JSON.parse(savedReview);
+            }
+        }
+
+        // Save words to localStorage
+        function saveWords() {
+            localStorage.setItem('wordPool', JSON.stringify(wordPool));
+            localStorage.setItem('wordsToReview', JSON.stringify(wordsToReview));
+        }
+
+        // Initialize game
+        function initGame() {
+            loadSavedWords();
+            
+            // Reset completed words count when starting new game
+            completedWordsCount = 0;
+            
+            // Create a shuffled copy of wordPool
+            words = [...wordPool];
+            remainingWords = [...wordPool];
+            shuffleArray(remainingWords);
+            
+            totalWordsCountEl.textContent = wordPool.length;
+            
+            if (remainingWords.length > 0) {
+                loadWord();
+            } else {
+                showReport();
+            }
+            
+            setupEventListeners();
+        }
+
+        // Load current word
+        function loadWord() {
+            currentWord = remainingWords[currentWordIndex];
+            meaningEl.textContent = currentWord.meaning;
+            posEl.textContent = currentWord.pos;
+            
+            // Format phonics with colored vowels and consonants
+            const phonicsParts = currentWord.phonic.split('-');
+            phonicsEl.innerHTML = phonicsParts.map(part => {
+                return part.split('').map(char => {
+                    if (/[aeiouy]/i.test(char)) {
+                        return `<span class="vowel">${char}</span>`;
+                    } else if (char === '-') {
+                        return `<span class="hyphen">${char}</span>`;
+                    } else {
+                        return `<span class="consonant">${char}</span>`;
+                    }
+                }).join('');
+            }).join('<span class="hyphen">-</span>');
+            
+            phonicsEl.classList.remove('show');
+            setupLetterSelection();
+            
+            // Auto-play the word pronunciation after 100ms delay
+            setTimeout(() => {
+                playBtn.classList.add('pulse');
+                audio.src = `https://dict.youdao.com/dictvoice?type=0&audio=${encodeURIComponent(currentWord.word)}`;
+                audio.play();
+                
+                audio.onended = () => {
+                    playBtn.classList.remove('pulse');
+                };
+            }, 100);
+        }
+
+        // Setup letter selection area
+        function setupLetterSelection() {
+            // Clear previous letters
+            selectedLettersEl.innerHTML = '';
+            letterContainer.innerHTML = '';
+            selectedLetters = [];
+            
+            // Get letters from current word
+            const letters = currentWord.word.split('');
+            
+            // Add 2-3 random extra letters
+            const extraLetters = getRandomLetters(2 + Math.floor(Math.random() * 2), letters);
+            const allLetters = [...letters, ...extraLetters];
+            
+            // Shuffle letters
+            shuffleArray(allLetters);
+            
+            // Create letter elements
+            allLetters.forEach((letter, index) => {
+                const letterEl = document.createElement('div');
+                letterEl.className = 'letter';
+                letterEl.textContent = letter;
+                letterEl.dataset.index = index;
+                letterEl.addEventListener('click', () => {
+                    selectLetter(letterEl, letter);
+                    phonicsEl.classList.remove('show');
+                });
+                letterContainer.appendChild(letterEl);
+            });
+        }
+
+        // Get random letters that aren't in the word
+        function getRandomLetters(count, excludeLetters) {
+            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+            const excludeSet = new Set(excludeLetters.map(l => l.toLowerCase()));
+            const availableLetters = alphabet.split('').filter(l => !excludeSet.has(l));
+            
+            shuffleArray(availableLetters);
+            return availableLetters.slice(0, count);
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Select a letter
+        function selectLetter(letterEl, letter) {
+            // If letter is already selected, remove it
+            const selectedIndex = selectedLetters.findIndex(l => l.element === letterEl);
+            if (selectedIndex !== -1) {
+                const removed = selectedLetters.splice(selectedIndex, 1)[0];
+                removed.element.style.display = 'flex';
+                updateSelectedLetters();
+                return;
+            }
+            
+            // Add to selected letters
+            selectedLetters.push({
+                letter,
+                element: letterEl
+            });
+            letterEl.style.display = 'none';
+            
+            updateSelectedLetters();
+            
+            // Check if word is complete
+            if (selectedLetters.length === currentWord.word.length) {
+                checkWord();
+            }
+        }
+
+        // Update selected letters display
+        function updateSelectedLetters() {
+            // Clear previous selected letters
+            selectedLettersEl.innerHTML = '';
+            
+            // Add new selected letters
+            selectedLetters.forEach((item, index) => {
+                const letterEl = document.createElement('div');
+                letterEl.className = 'selected-letter';
+                letterEl.textContent = item.letter;
+                letterEl.addEventListener('click', () => {
+                    item.element.style.display = 'flex';
+                    selectedLetters = selectedLetters.filter(l => l !== item);
+                    updateSelectedLetters();
+                    phonicsEl.classList.remove('show');
+                });
+                selectedLettersEl.appendChild(letterEl);
+            });
+        }
+
+        // Check if the word is correct
+        function checkWord() {
+            const userWord = selectedLetters.map(l => l.letter).join('').toLowerCase();
+            
+            if (userWord === currentWord.word.toLowerCase()) {
+                // Correct
+                feedbackEl.textContent = '✔';
+                feedbackEl.style.color = '#4CAF50';
+                correctAudio.play();
+                
+                // Remove the word from remainingWords
+                remainingWords.splice(currentWordIndex, 1);
+                completedWordsCount++;
+                
+                setTimeout(() => {
+                    feedbackEl.textContent = '';
+                    
+                    if (remainingWords.length > 0) {
+                        // Move to next word (randomly)
+                        currentWordIndex = Math.floor(Math.random() * remainingWords.length);
+                        loadWord();
+                    } else {
+                        // All words completed
+                        showReport();
+                    }
+                }, 1500);
+            } else {
+                // Incorrect
+                feedbackEl.textContent = '✘';
+                feedbackEl.style.color = '#F44336';
+                wrongAudio.play();
+                
+                // Flash letters
+                const selectedEls = selectedLettersEl.querySelectorAll('.selected-letter');
+                selectedEls.forEach(el => {
+                    el.classList.add('flash');
+                    setTimeout(() => el.classList.remove('flash'), 500);
+                });
+                
+                // Add to review list if not already there
+                if (!wordsToReview.includes(currentWord.word)) {
+                    wordsToReview.push(currentWord.word);
+                }
+                
+                setTimeout(() => {
+                    feedbackEl.textContent = '';
+                    setupLetterSelection();
+                    
+                    // Auto-play the word pronunciation after incorrect attempt
+                    setTimeout(() => {
+                        playBtn.classList.add('pulse');
+                        audio.src = `https://dict.youdao.com/dictvoice?type=0&audio=${encodeURIComponent(currentWord.word)}`;
+                        audio.play();
+                        
+                        audio.onended = () => {
+                            playBtn.classList.remove('pulse');
+                        };
+                    }, 100);
+                }, 1500);
+            }
+            
+            saveWords();
+        }
+
+        // Show report
+        function showReport() {
+            const now = new Date();
+            dateEl.textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            completedWordsEl.textContent = completedWordsCount;
+            totalWordsCountEl.textContent = wordPool.length;
+            reviewWordsEl.textContent = wordsToReview.join(', ') || 'None';
+            reportModal.style.display = 'flex';
+        }
+
+        // Import words from Excel
+        function importWordsFromExcel(file) {
+            progressContainer.style.display = 'flex';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                let newWordPool = [];
+                let processed = 0;
+                
+                const processBatch = (start, batchSize) => {
+                    const end = Math.min(start + batchSize, jsonData.length);
+                    
+                    for (let i = start; i < end; i++) {
+                        const row = jsonData[i];
+                        if (row.word && row.meaning) {
+                            newWordPool.push({
+                                word: row.word.toString(),
+                                phonic: row.phonic ? row.phonic.toString() : row.word.toString(),
+                                pos: row.abbr ? row.abbr.toString() + "." : "n.",
+                                meaning: row.meaning.toString()
+                            });
+                        }
+                        
+                        processed++;
+                        const progress = Math.floor((processed / jsonData.length) * 100);
+                        progressFill.style.width = progress + '%';
+                        progressText.textContent = progress + '%';
+                    }
+                    
+                    if (end < jsonData.length) {
+                        setTimeout(() => processBatch(end, batchSize), 0);
+                    } else {
+                        // Import complete
+                        setTimeout(() => {
+                            wordPool = newWordPool;
+                            remainingWords = [...wordPool];
+                            shuffleArray(remainingWords);
+                            currentWordIndex = 0;
+                            wordsToReview = [];
+                            completedWordsCount = 0;
+                            
+                            totalWordsCountEl.textContent = wordPool.length;
+                            
+                            saveWords();
+                            progressContainer.style.display = 'none';
+                            
+                            if (remainingWords.length > 0) {
+                                loadWord();
+                            } else {
+                                showReport();
+                            }
+                        }, 500);
+                    }
+                };
+                
+                processBatch(0, 10);
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Play button
+            playBtn.addEventListener('click', () => {
+                playBtn.classList.add('pulse');
+                audio.src = `https://dict.youdao.com/dictvoice?type=0&audio=${currentWord.word}`;
+                audio.play();
+                
+                audio.onended = () => {
+                    playBtn.classList.remove('pulse');
+                };
+            });
+            
+            // Hint button
+            hintBtn.addEventListener('click', () => {
+                phonicsEl.classList.toggle('show');
+            });
+            
+            // Report button
+            reportBtn.addEventListener('click', showReport);
+            
+            // Input button
+            inputBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // File input
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    importWordsFromExcel(e.target.files[0]);
+                }
+            });
+            
+            // Close modal button
+            closeBtn.addEventListener('click', () => {
+                reportModal.style.display = 'none';
+                
+                // Reset game if all words are completed
+                if (remainingWords.length === 0 && wordPool.length > 0) {
+                    remainingWords = [...wordPool];
+                    shuffleArray(remainingWords);
+                    currentWordIndex = 0;
+                    completedWordsCount = 0;
+                    loadWord();
+                }
+            });
+            
+            // Close modal when clicking outside
+            reportModal.addEventListener('click', (e) => {
+                if (e.target === reportModal) {
+                    reportModal.style.display = 'none';
+                    
+                    // Reset game if all words are completed
+                    if (remainingWords.length === 0 && wordPool.length > 0) {
+                        remainingWords = [...wordPool];
+                        shuffleArray(remainingWords);
+                        currentWordIndex = 0;
+                        completedWordsCount = 0;
+                        loadWord();
+                    }
+                }
+            });
+        }
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
