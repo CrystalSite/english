@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alphabet Matching Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffb7d5 0%, #ffdfc4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: 'Comic Neue', cursive;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: white;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(255, 105, 180, 0.3);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 装饰元素 */
+        .decoration {
+            position: absolute;
+            z-index: 0;
+        }
+        
+        .circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff9ec8 0%, #ffb7d5 100%);
+            top: -40px;
+            right: -40px;
+        }
+        
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            border-bottom: 100px solid #a0e7ff;
+            bottom: -50px;
+            left: -50px;
+            transform: rotate(45deg);
+            opacity: 0.7;
+        }
+        
+        .star {
+            position: absolute;
+            font-size: 32px;
+            color: #ffd700;
+            top: 30%;
+            right: 10%;
+            animation: twinkle 2s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        /* 头部样式 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(to right, #ff9ec8, #a0e7ff);
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 42px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            text-shadow: 3px 3px 5px rgba(0,0,0,0.2);
+            flex-grow: 1;
+            letter-spacing: 2px;
+            font-family: 'Comic Neue', cursive;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .action-btn {
+            background: #ffffff;
+            color: #ff6b9c;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+            font-family: 'Comic Neue', cursive;
+            border: 3px solid #ffb7d5;
+        }
+        
+        .action-btn:hover {
+            background: #ffecf1;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        /* 大写字母显示区域 */
+        .uppercase-container {
+            background: #f7f9fc;
+            border-radius: 25px;
+            padding: 40px 30px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 15px rgba(255, 182, 193, 0.2);
+            position: relative;
+            z-index: 2;
+            border: 4px dashed #ffb7d5;
+            background: linear-gradient(135deg, #f0f9ff 0%, #fef6ff 100%);
+        }
+        
+        .uppercase-letter {
+            font-size: 100px;
+            font-weight: bold;
+            text-align: center;
+            color: #ff6b9c;
+            text-shadow: 5px 5px 0 rgba(255, 214, 165, 0.4);
+            font-family: 'Comic Neue', cursive;
+        }
+        
+        /* 小写字母选项区域 */
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .option {
+            width: 85px;
+            height: 85px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #5a5a5a;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 4px solid #ffb7d5;
+            font-family: 'Comic Neue', cursive;
+            font-size: 48px;
+        }
+        
+        .option.t-letter {
+            font-family: Arial, sans-serif;
+            font-size: 56px;
+            font-weight: 500;
+        }
+        
+        .option:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+            background: #fff0f5;
+            border-color: #ff6b9c;
+        }
+        
+        /* 反馈区域 */
+        .feedback {
+            text-align: center;
+            font-size: 70px;
+            height: 80px;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* 进度条 */
+        .progress-container {
+            height: 18px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            margin: 30px 0;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+            border: 2px solid #ffb7d5;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9ec8, #a0e7ff);
+            border-radius: 12px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* 结果弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            position: relative;
+            animation: popIn 0.6s;
+            background: linear-gradient(135deg, #fff9fc 0%, #f0f9ff 100%);
+            border: 5px solid #ffb7d5;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal h2 {
+            color: #ff6b9c;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 36px;
+            text-shadow: 2px 2px 3px rgba(0,0,0,0.1);
+            font-family: 'Comic Neue', cursive;
+        }
+        
+        .modal p {
+            font-size: 22px;
+            margin: 20px 0;
+            color: #555;
+            text-align: center;
+            font-family: 'Comic Neue', cursive;
+        }
+        
+        .modal span {
+            font-weight: bold;
+            color: #ff6b9c;
+        }
+        
+        .review-letters {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 24px;
+            text-align: center;
+            min-height: 70px;
+            border: 3px dashed #ffb7d5;
+            font-family: 'Comic Neue', cursive;
+            box-shadow: inset 0 0 10px rgba(255, 182, 193, 0.2);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 40px;
+            cursor: pointer;
+            color: #ff9ec8;
+            transition: color 0.3s;
+            font-family: 'Comic Neue', cursive;
+            font-weight: bold;
+        }
+        
+        .close-btn:hover {
+            color: #ff6b9c;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .pulse {
+            animation: pulse 0.5s;
+        }
+        
+        .flash {
+            animation: flash 0.5s;
+        }
+        
+        /* iOS 优化 - 确保动画结束后恢复原始状态 */
+        .option {
+            animation-fill-mode: forwards;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header {
+                flex-direction: column;
+                padding: 15px;
+            }
+            
+            .btn-group {
+                margin-top: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .action-btn {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+            
+            .uppercase-letter {
+                font-size: 80px;
+            }
+            
+            .option {
+                width: 70px;
+                height: 70px;
+                font-size: 40px;
+            }
+            
+            .option.t-letter {
+                font-size: 46px;
+            }
+            
+            .modal-content {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 装饰元素 -->
+        <div class="decoration circle"></div>
+        <div class="decoration triangle"></div>
+        <div class="star">★</div>
+        <div class="star" style="top:70%; left:15%;">★</div>
+        
+        <!-- 头部区域 -->
+        <div class="header">
+            <h1>Alphabet Matching</h1>
+            <div class="btn-group">
+                <button class="action-btn" id="reviewBtn">Review</button>
+                <button class="action-btn" id="reportBtn">Report</button>
+            </div>
+        </div>
+        
+        <!-- 进度条 -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <!-- 大写字母显示 -->
+        <div class="uppercase-container">
+            <div class="uppercase-letter" id="uppercaseLetter">A</div>
+        </div>
+        
+        <!-- 小写字母选项 -->
+        <div class="options-container" id="optionsContainer">
+            <div class="option">a</div>
+            <div class="option">b</div>
+            <div class="option">c</div>
+            <div class="option">d</div>
+            <div class="option">e</div>
+        </div>
+        
+        <!-- 反馈区域 -->
+        <div class="feedback" id="feedback"></div>
+    </div>
+    
+    <!-- 结果弹窗 -->
+    <div class="modal" id="reportModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>Game Result</h2>
+            <p>Date: <span id="currentDate"></span></p>
+            <p>Completed: <span id="completedCount">0</span>/<span id="totalCount">26</span></p>
+            <p>Letters to Review:</p>
+            <div class="review-letters" id="reviewLetters"></div>
+        </div>
+    </div>
+    
+    <!-- Review 弹窗 -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeReviewModal">&times;</span>
+            <h2>Review Letters</h2>
+            <p>Enter letters to practice (e.g. ABC):</p>
+            <input type="text" id="reviewInput" style="width: 80%; padding: 15px; font-size: 24px; text-align: center; margin: 20px auto; display: block; border: 3px solid #ffb7d5; border-radius: 15px; font-family: 'Comic Neue', cursive;">
+            <button class="action-btn" id="startReviewBtn" style="margin: 20px auto; display: block; background: #ff6b9c; color: white; font-size: 22px; padding: 15px 40px;">Start Practice</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态变量
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let remainingLetters = []; // 未练习的字母
+        let currentLetter = '';
+        let completedLetters = []; // 已完成的字母
+        let incorrectLetters = []; // 错误过的字母
+        let options = []; // 当前选项
+        let totalLetters = 26; // 总字母数
+        let reviewMode = false; // 是否处于复习模式
+        let isGameCompleted = false; // 游戏是否完成
+        
+        // DOM 元素
+        const uppercaseElement = document.getElementById('uppercaseLetter');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedbackElement = document.getElementById('feedback');
+        const reportBtn = document.getElementById('reportBtn');
+        const reviewBtn = document.getElementById('reviewBtn');
+        const reportModal = document.getElementById('reportModal');
+        const reviewModal = document.getElementById('reviewModal');
+        const closeModal = document.getElementById('closeModal');
+        const closeReviewModal = document.getElementById('closeReviewModal');
+        const completedCountElement = document.getElementById('completedCount');
+        const totalCountElement = document.getElementById('totalCount');
+        const reviewLettersElement = document.getElementById('reviewLetters');
+        const currentDateElement = document.getElementById('currentDate');
+        const progressBar = document.getElementById('progressBar');
+        const reviewInput = document.getElementById('reviewInput');
+        const startReviewBtn = document.getElementById('startReviewBtn');
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置游戏状态
+            remainingLetters = [...alphabet];
+            completedLetters = [];
+            incorrectLetters = [];
+            totalLetters = 26;
+            reviewMode = false;
+            isGameCompleted = false;
+            
+            // 开始新游戏
+            nextLetter();
+        }
+        
+        // 获取下一个字母
+        function nextLetter() {
+            feedbackElement.innerHTML = '';
+            
+            // 如果所有字母都完成了，显示报告
+            if (remainingLetters.length === 0) {
+                isGameCompleted = true;
+                showReport();
+                return;
+            }
+            
+            // 随机选择一个字母
+            const randomIndex = Math.floor(Math.random() * remainingLetters.length);
+            currentLetter = remainingLetters[randomIndex];
+            
+            // 从剩余字母中移除当前字母
+            remainingLetters.splice(randomIndex, 1);
+            
+            // 显示大写字母
+            uppercaseElement.textContent = currentLetter;
+            
+            // 生成选项（1个正确答案 + 4个随机错误答案）
+            generateOptions();
+            
+            // 更新进度条
+            updateProgressBar();
+            
+            // 播放字母发音（延迟30ms）
+            setTimeout(() => {
+                playLetterSound(currentLetter);
+            }, 30);
+        }
+        
+        // 播放字母发音
+        function playLetterSound(letter) {
+            const audio = new Audio(`https://dict.youdao.com/dictvoice?type=0&audio=${letter}`);
+            audio.play().catch(e => console.log("Audio play error:", e));
+        }
+        
+        // 生成选项
+        function generateOptions() {
+            options = [currentLetter.toLowerCase()];
+            
+            // 添加4个随机错误选项
+            while (options.length < 5) {
+                const randomLetter = getRandomLowercaseLetter();
+                if (!options.includes(randomLetter)) {
+                    options.push(randomLetter);
+                }
+            }
+            
+            // 打乱选项顺序
+            shuffleArray(options);
+            
+            // 更新选项显示
+            renderOptions();
+        }
+        
+        // 获取随机小写字母
+        function getRandomLowercaseLetter() {
+            const randomIndex = Math.floor(Math.random() * 26);
+            return alphabet[randomIndex].toLowerCase();
+        }
+        
+        // 打乱数组（Fisher-Yates 洗牌算法）
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // 渲染选项
+        function renderOptions() {
+            optionsContainer.innerHTML = '';
+            
+            options.forEach(letter => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                
+                // 特殊处理字母't'
+                if (letter === 't') {
+                    optionElement.classList.add('t-letter');
+                }
+                
+                optionElement.textContent = letter;
+                optionElement.addEventListener('click', () => checkAnswer(letter));
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+        
+        // 检查答案
+        function checkAnswer(selectedLetter) {
+            const correctAnswer = currentLetter.toLowerCase();
+            
+            // 禁用所有选项，防止多次点击
+            optionsContainer.querySelectorAll('.option').forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            
+            if (selectedLetter === correctAnswer) {
+                // 正确答案
+                feedbackElement.textContent = '✔';
+                feedbackElement.style.color = '#4ecdc4';
+                
+                // 添加脉冲动画到正确选项
+                const correctOption = Array.from(optionsContainer.children).find(
+                    el => el.textContent === correctAnswer
+                );
+                if (correctOption) {
+                    correctOption.classList.add('pulse');
+                    
+                    // iOS优化：动画结束后移除类
+                    setTimeout(() => {
+                        correctOption.classList.remove('pulse');
+                        // 恢复点击事件
+                        optionsContainer.querySelectorAll('.option').forEach(opt => {
+                            opt.style.pointerEvents = 'auto';
+                        });
+                    }, 500);
+                }
+                
+                // 添加到已完成列表
+                completedLetters.push(currentLetter);
+                
+                // 延迟后进入下一个字母
+                setTimeout(() => {
+                    nextLetter();
+                }, 1000);
+            } else {
+                // 错误答案
+                feedbackElement.textContent = '✘';
+                feedbackElement.style.color = '#ff6b6b';
+                
+                // 添加到错误列表（如果尚未添加）
+                if (!incorrectLetters.includes(currentLetter)) {
+                    incorrectLetters.push(currentLetter);
+                }
+                
+                // 添加闪烁动画到错误选项
+                const selectedOption = Array.from(optionsContainer.children).find(
+                    el => el.textContent === selectedLetter
+                );
+                if (selectedOption) {
+                    selectedOption.classList.add('flash');
+                    
+                    // iOS优化：动画结束后移除类
+                    setTimeout(() => {
+                        selectedOption.classList.remove('flash');
+                        // 恢复点击事件
+                        optionsContainer.querySelectorAll('.option').forEach(opt => {
+                            opt.style.pointerEvents = 'auto';
+                        });
+                    }, 500);
+                }
+                
+                // 重新打乱选项
+                setTimeout(() => {
+                    shuffleArray(options);
+                    renderOptions();
+                    feedbackElement.innerHTML = '';
+                    
+                    // 播放字母发音（延迟30ms）
+                    setTimeout(() => {
+                        playLetterSound(currentLetter);
+                    }, 30);
+                }, 1000);
+            }
+        }
+        
+        // 播放字母发音
+        function playLetterSound(letter) {
+            const audio = new Audio(`https://dict.youdao.com/dictvoice?type=0&audio=${letter}`);
+            audio.play().catch(e => console.log("Audio play error:", e));
+        }
+        
+        // 显示报告
+        function showReport() {
+            // 更新报告内容
+            completedCountElement.textContent = completedLetters.length;
+            totalCountElement.textContent = totalLetters;
+            
+            // 格式化日期
+            const now = new Date();
+            currentDateElement.textContent = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // 显示需要复习的字母
+            if (incorrectLetters.length > 0) {
+                reviewLettersElement.textContent = incorrectLetters.join(', ');
+            } else {
+                reviewLettersElement.textContent = "Great job! All letters correct!";
+            }
+            
+            // 显示报告弹窗
+            reportModal.style.display = 'flex';
+        }
+        
+        // 更新进度条
+        function updateProgressBar() {
+            const progress = ((totalLetters - remainingLetters.length) / totalLetters) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // 开始复习模式
+        function startReviewMode() {
+            const inputText = reviewInput.value.toUpperCase();
+            if (!inputText) return;
+            
+            // 提取有效字母
+            const letters = inputText.split('')
+                .filter(char => /[A-Z]/.test(char))
+                .map(char => char.toUpperCase());
+            
+            if (letters.length === 0) return;
+            
+            // 创建复习队列（每个字母重复3次）
+            remainingLetters = [];
+            letters.forEach(letter => {
+                for (let i = 0; i < 3; i++) {
+                    remainingLetters.push(letter);
+                }
+            });
+            
+            // 打乱顺序
+            shuffleArray(remainingLetters);
+            
+            // 更新游戏状态
+            completedLetters = [];
+            incorrectLetters = [];
+            totalLetters = remainingLetters.length;
+            reviewMode = true;
+            isGameCompleted = false;
+            
+            // 关闭弹窗
+            reviewModal.style.display = 'none';
+            
+            // 开始复习
+            nextLetter();
+        }
+        
+        // 事件监听器
+        reportBtn.addEventListener('click', showReport);
+        reviewBtn.addEventListener('click', () => {
+            reviewModal.style.display = 'flex';
+            reviewInput.value = '';
+            reviewInput.focus();
+        });
+        
+        closeModal.addEventListener('click', () => {
+            reportModal.style.display = 'none';
+            // 如果游戏已完成，则重置游戏
+            if (isGameCompleted) {
+                initGame();
+            }
+        });
+        
+        closeReviewModal.addEventListener('click', () => {
+            reviewModal.style.display = 'none';
+        });
+        
+        startReviewBtn.addEventListener('click', startReviewMode);
+        
+        // 点击弹窗外区域关闭弹窗
+        window.addEventListener('click', (e) => {
+            if (e.target === reportModal) {
+                reportModal.style.display = 'none';
+                if (isGameCompleted) {
+                    initGame();
+                }
+            }
+            if (e.target === reviewModal) {
+                reviewModal.style.display = 'none';
+            }
+        });
+        
+        // 处理键盘事件
+        reviewInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                startReviewMode();
+            }
+        });
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
