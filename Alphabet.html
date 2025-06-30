@@ -139,6 +139,7 @@
             z-index: 2;
             border: 4px dashed #ffb7d5;
             background: linear-gradient(135deg, #f0f9ff 0%, #fef6ff 100%);
+            cursor: pointer; /* 添加指针效果 */
         }
         
         .uppercase-letter {
@@ -148,6 +149,7 @@
             color: #ff6b9c;
             text-shadow: 5px 5px 0 rgba(255, 214, 165, 0.4);
             font-family: 'Comic Neue', cursive;
+            transition: transform 0.2s ease;
         }
         
         /* 小写字母选项区域 */
@@ -175,17 +177,12 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             border: 4px solid #ffb7d5;
-            font-family: 'Comic Neue', cursive;
+            font-family: Arial, sans-serif;
             font-size: 48px;
         }
         
-        .option.t-letter {
-            font-family: Arial, sans-serif;
-            font-size: 56px;
-            font-weight: 500;
-        }
-        
-        .option:hover {
+        /* 修复平板设备上的点击状态问题 */
+        .option:active, .option.active-state {
             transform: translateY(-8px);
             box-shadow: 0 12px 25px rgba(0,0,0,0.2);
             background: #fff0f5;
@@ -363,10 +360,6 @@
                 font-size: 40px;
             }
             
-            .option.t-letter {
-                font-size: 46px;
-            }
-            
             .modal-content {
                 padding: 30px;
             }
@@ -396,7 +389,7 @@
         </div>
         
         <!-- 大写字母显示 -->
-        <div class="uppercase-container">
+        <div class="uppercase-container" id="uppercaseContainer">
             <div class="uppercase-letter" id="uppercaseLetter">A</div>
         </div>
         
@@ -450,6 +443,7 @@
         
         // DOM 元素
         const uppercaseElement = document.getElementById('uppercaseLetter');
+        const uppercaseContainer = document.getElementById('uppercaseContainer');
         const optionsContainer = document.getElementById('optionsContainer');
         const feedbackElement = document.getElementById('feedback');
         const reportBtn = document.getElementById('reportBtn');
@@ -506,11 +500,6 @@
             
             // 更新进度条
             updateProgressBar();
-            
-            // 播放字母发音（延迟30ms）
-            setTimeout(() => {
-                playLetterSound(currentLetter);
-            }, 30);
         }
         
         // 播放字母发音
@@ -559,14 +548,25 @@
             options.forEach(letter => {
                 const optionElement = document.createElement('div');
                 optionElement.className = 'option';
-                
-                // 特殊处理字母't'
-                if (letter === 't') {
-                    optionElement.classList.add('t-letter');
-                }
-                
                 optionElement.textContent = letter;
-                optionElement.addEventListener('click', () => checkAnswer(letter));
+                
+                // 添加点击事件监听器
+                optionElement.addEventListener('click', function() {
+                    // 播放点击的字母发音
+                    playLetterSound(letter.toUpperCase());
+                    
+                    // 添加临时活动状态
+                    this.classList.add('active-state');
+                    
+                    // 300ms后移除活动状态
+                    setTimeout(() => {
+                        this.classList.remove('active-state');
+                    }, 300);
+                    
+                    // 检查答案
+                    checkAnswer(letter);
+                });
+                
                 optionsContainer.appendChild(optionElement);
             });
         }
@@ -582,7 +582,7 @@
             
             if (selectedLetter === correctAnswer) {
                 // 正确答案
-                feedbackElement.textContent = '✔';
+                feedbackElement.textContent = '✓';
                 feedbackElement.style.color = '#4ecdc4';
                 
                 // 添加脉冲动画到正确选项
@@ -641,19 +641,8 @@
                     shuffleArray(options);
                     renderOptions();
                     feedbackElement.innerHTML = '';
-                    
-                    // 播放字母发音（延迟30ms）
-                    setTimeout(() => {
-                        playLetterSound(currentLetter);
-                    }, 30);
                 }, 1000);
             }
-        }
-        
-        // 播放字母发音
-        function playLetterSound(letter) {
-            const audio = new Audio(`https://dict.youdao.com/dictvoice?type=0&audio=${letter}`);
-            audio.play().catch(e => console.log("Audio play error:", e));
         }
         
         // 显示报告
@@ -745,6 +734,11 @@
         });
         
         startReviewBtn.addEventListener('click', startReviewMode);
+        
+        // 点击大写字母播放发音
+        uppercaseContainer.addEventListener('click', () => {
+            playLetterSound(currentLetter);
+        });
         
         // 点击弹窗外区域关闭弹窗
         window.addEventListener('click', (e) => {
