@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Sight Words</title>
-    <!-- 引入 SheetJS 解析 Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none; /* 避免拖动，不影响输入框 */
+            user-select: none;
         }
 
         body {
@@ -23,10 +22,8 @@
             align-items: center;
             padding: 30px 20px;
             position: relative;
-            backdrop-filter: blur(0px);
         }
 
-        /* 🌸 可爱装饰 (蝴蝶结 / 花 / 心) */
         .deco-flower {
             position: absolute;
             font-size: 70px;
@@ -39,7 +36,6 @@
         .deco-3 { top: 40%; right: 10px; font-size: 55px; opacity: 0.2; }
         .deco-4 { bottom: 15%; left: 15px; font-size: 60px; opacity: 0.2; }
 
-        /* 玻璃拟态主卡片 */
         .glass-card {
             background: rgba(255, 245, 255, 0.55);
             backdrop-filter: blur(12px);
@@ -53,7 +49,6 @@
             z-index: 2;
         }
 
-        /* 标题 */
         .title {
             text-align: center;
             font-family: 'Arial', '微软雅黑', sans-serif;
@@ -90,7 +85,6 @@
             color: #ffb7e6;
         }
 
-        /* 按钮栏 */
         .button-bar {
             display: flex;
             justify-content: space-between;
@@ -119,7 +113,6 @@
         }
         .cute-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bc7ac2; }
 
-        /* 激活样式 (Phonic / Random / Test 按下状态) */
         .cute-btn.active-mode {
             background: #d48bd9;
             color: white;
@@ -128,7 +121,6 @@
             text-shadow: 0 1px 1px #5e2a64;
         }
 
-        /* 单词导航区 */
         .word-navigation {
             display: flex;
             align-items: center;
@@ -137,7 +129,6 @@
             flex-wrap: wrap;
         }
 
-        /* 三角形按钮 (等边三角形感觉) */
         .triangle-btn {
             width: 75px;
             height: 75px;
@@ -163,12 +154,11 @@
             transform: none;
         }
 
-        /* 白色圆角矩形A (更长更宽，可容纳长单词不换行) */
         .word-card {
             background: white;
             border-radius: 70px;
-            min-width: 380px;
-            max-width: 620px;
+            min-width: 500px;
+            max-width: 800px;
             width: auto;
             padding: 35px 45px;
             text-align: center;
@@ -184,7 +174,6 @@
         .word-card::-webkit-scrollbar { height: 6px; background: #f1d6ff; border-radius: 10px; }
         .word-card::-webkit-scrollbar-thumb { background: #cb86d4; border-radius: 10px; }
 
-        /* 核心文字样式 (单词/音标) */
         .word-text {
             font-family: 'Arial', '微软雅黑', 'Microsoft YaHei', sans-serif;
             font-size: 80px;
@@ -193,7 +182,6 @@
             display: inline-block;
             white-space: nowrap;
         }
-        /* 音标内部彩色样式继承字体大小 */
         .phonic-colored {
             font-family: 'Arial', '微软雅黑', sans-serif;
             font-size: 80px;
@@ -206,7 +194,6 @@
             font-weight: bold;
         }
 
-        /* 计数小标签 (装饰) */
         .word-counter {
             text-align: center;
             margin-top: 20px;
@@ -221,7 +208,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* 模态框 (文件导入) */
         .modal {
             display: none;
             position: fixed;
@@ -284,7 +270,6 @@
             color: #a15caa;
         }
 
-        /* Finish 特效 */
         .finish-toast {
             position: fixed;
             top: 45%;
@@ -355,7 +340,6 @@
     </div>
 </div>
 
-<!-- 模态框 Excel 导入 -->
 <div id="excelModal" class="modal">
     <div class="modal-content">
         <h3>📎 上傳 Excel 表格</h3>
@@ -370,15 +354,13 @@
 </div>
 
 <script>
-    // ---------- 核心數據結構 ----------
-    let wordsLibrary = [];       // 存儲物件 { word, audio, phonic }
-    let currentOrderIndices = []; // 當前顯示順序 (存儲原始索引)
-    let currentIdx = 0;          // 當前顯示在 currentOrderIndices 中的位置
-    let isRandomMode = false;     // 隨機模式標誌
-    let isPhonicMode = false;     // 顯示音標模式 (彩色)
-    let isTestMode = false;       // 測驗模式 (禁止發音)
+    let wordsLibrary = [];
+    let currentOrderIndices = [];
+    let currentIdx = 0;
+    let isRandomMode = false;
+    let isPhonicMode = false;
+    let isTestMode = false;
 
-    // DOM 元素
     const wordDisplayDiv = document.getElementById('wordDisplay');
     const leftBtn = document.getElementById('leftTriangleBtn');
     const rightBtn = document.getElementById('rightTriangleBtn');
@@ -393,15 +375,116 @@
     const closeModalBtn = document.getElementById('closeModalBtn');
     const fileSelectLabel = document.getElementById('fileSelectLabel');
 
-    // 輔助: 將原始索引陣列重新生成 (根據是否隨機)
-    function rebuildOrderIndices() {
-        if (!wordsLibrary.length) {
-            currentOrderIndices = [];
+    // ============================================================
+    // 發音核心：中英文自動判斷 + 有道優先 / Web Speech API 回退
+    // ============================================================
+
+    const HAS_CHINESE = /[\u4E00-\u9FA5]|[\uFE30-\uFFA0]/;  // 中文字符檢測
+    let voicesLoaded = false;
+    let cachedVoices = [];
+
+    // 預載語音列表（必須等 voiceschanged）
+    function initVoices() {
+        if (!('speechSynthesis' in window)) return;
+        function loadVoices() {
+            cachedVoices = speechSynthesis.getVoices();
+            voicesLoaded = cachedVoices.length > 0;
+        }
+        loadVoices();
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // 根據語言挑選最佳語音（不硬編碼索引，按 lang 篩選 + 關鍵詞回退）
+    function pickVoice(langPrefix) {
+        if (!voicesLoaded) cachedVoices = speechSynthesis.getVoices();
+        const voices = cachedVoices;
+        // 先精確匹配 lang（如 zh-CN / en-US）
+        let found = voices.find(v => v.lang === langPrefix);
+        // 再放寬到語言前綴（zh / en）
+        if (!found) found = voices.find(v => v.lang.startsWith(langPrefix.split('-')[0]));
+        // 最後按名稱關鍵詞回退
+        if (!found) {
+            const keyword = langPrefix.startsWith('zh') ? /chinese|中文|國語/i : /english|英文/i;
+            found = voices.find(v => keyword.test(v.name));
+        }
+        return found || null;
+    }
+
+    // Web Speech API 發音（自動根據文本判斷 zh-CN / en-US）
+    function speakWithWebSpeech(text) {
+        if (!('speechSynthesis' in window)) {
+            console.warn('瀏覽器不支援 Web Speech API');
             return;
         }
+        // 先取消正在播放的語音，避免重疊
+        speechSynthesis.cancel();
+
+        const isChinese = HAS_CHINESE.test(text);
+        const lang = isChinese ? 'zh-CN' : 'en-US';
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;                 // 必須在 speak 之前設置
+        utterance.rate = isChinese ? 0.9 : 0.85;   // 中文稍慢更自然
+        utterance.pitch = isChinese ? 0.8 : 1;
+        utterance.volume = 1;
+
+        const voice = pickVoice(lang);
+        if (voice) utterance.voice = voice;
+
+        speechSynthesis.speak(utterance);
+    }
+
+    // 有道 TTS（僅英文使用；中文直接走 Web Speech）
+    function speakWithYoudao(text) {
+        return new Promise((resolve, reject) => {
+            const encoded = encodeURIComponent(text);
+            const ttsUrl = `https://dict.youdao.com/dictvoice?type=0&audio=${encoded}`;
+            const audio = new Audio(ttsUrl);
+            audio.play().then(resolve).catch(reject);
+        });
+    }
+
+    // 統一發音入口
+    function speakText(text) {
+        if (!text || !text.trim()) return;
+
+        // 中文：一律 Web Speech API（有道對中文長句/生僻詞不穩定）
+        if (HAS_CHINESE.test(text)) {
+            speakWithWebSpeech(text);
+            return;
+        }
+
+        // 英文：有音檔先播音檔，失敗則回退 Web Speech
+        const item = getCurrentItem();
+        const audioUrl = item && item.audio && item.audio.trim() !== '' ? item.audio.trim() : null;
+
+        if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch(() => {
+                // 音檔播放失敗（含長單詞無音檔）→ Web Speech API 接手
+                speakWithWebSpeech(text);
+            });
+        } else {
+            // 沒有自訂音檔：直接用 Web Speech API，
+            // 不再走有道（有道對長英文單詞常常沒有發音）
+            speakWithWebSpeech(text);
+        }
+    }
+
+    // 獲取當前單詞物件
+    function getCurrentItem() {
+        if (!wordsLibrary.length || currentOrderIndices.length === 0) return null;
+        return wordsLibrary[currentOrderIndices[currentIdx]] || null;
+    }
+
+    // ============================================================
+    // 原有邏輯保持不變（僅替換 speakCurrentWord）
+    // ============================================================
+
+    function rebuildOrderIndices() {
+        if (!wordsLibrary.length) { currentOrderIndices = []; return; }
         const total = wordsLibrary.length;
         if (isRandomMode) {
-            // 產生隨機不重複順序
             let arr = Array.from({length: total}, (_, i) => i);
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -409,71 +492,55 @@
             }
             currentOrderIndices = arr;
         } else {
-            // 原始順序 0,1,2...
             currentOrderIndices = Array.from({length: total}, (_, i) => i);
         }
     }
 
-    // 重置索引 (遊戲重新開始)
     function resetToFirst() {
         if (!currentOrderIndices.length) return;
         currentIdx = 0;
         renderCurrentWord();
-        updateTriangleVisibility();
-        updateCounter();
     }
 
-    // 更新左右三角可見性 (第一個隱藏左，最後一個不隱藏右三角，永遠顯示右三角除非空)
     function updateTriangleVisibility() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) {
             leftBtn.classList.add('disabled-btn');
             rightBtn.classList.add('disabled-btn');
             return;
         }
-        if (currentIdx === 0) {
-            leftBtn.classList.add('disabled-btn');
-        } else {
-            leftBtn.classList.remove('disabled-btn');
-        }
-        // 右邊三角形永遠顯示 (但最後一個點擊觸發Finish特效)
+        if (currentIdx === 0) leftBtn.classList.add('disabled-btn');
+        else leftBtn.classList.remove('disabled-btn');
         rightBtn.classList.remove('disabled-btn');
-        if (currentOrderIndices.length === 0) rightBtn.classList.add('disabled-btn');
     }
 
-    // 更新計數器
     function updateCounter() {
         if (wordsLibrary.length && currentOrderIndices.length) {
-            counterSpan.innerText = `${currentIdx+1} / ${currentOrderIndices.length}`;
+            counterSpan.innerText = `${currentIdx + 1} / ${currentOrderIndices.length}`;
         } else {
             counterSpan.innerText = `0 / 0`;
         }
     }
 
-    // 將音標字符串轉為彩色HTML (元音紅色，輔音藍色，'-'淺灰)
     function colorizePhonic(phonicStr) {
         if (!phonicStr) return '<span style="color:#888;">(無音標)</span>';
         let result = '';
         for (let ch of phonicStr) {
             const lower = ch.toLowerCase();
             if ('aeiou'.includes(lower)) {
-                // 元音字母 紅色
                 result += `<span style="color:#e34234; font-weight:bold;">${escapeHtml(ch)}</span>`;
             } else if (ch === '-') {
                 result += `<span style="color:#b0b0b0;">-</span>`;
             } else if (/[a-zA-Z]/.test(ch)) {
-                // 輔音字母 藍色
                 result += `<span style="color:#3a6ea5; font-weight:bold;">${escapeHtml(ch)}</span>`;
             } else {
-                // 其他 (空格, 數字等) 保留深灰色
                 result += `<span style="color:#5f5b6e;">${escapeHtml(ch)}</span>`;
             }
         }
         return `<div class="phonic-colored" style="white-space: nowrap;">${result}</div>`;
     }
 
-    // 簡單防XSS
     function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
+        return String(str).replace(/[&<>]/g, function(m) {
             if (m === '&') return '&amp;';
             if (m === '<') return '&lt;';
             if (m === '>') return '&gt;';
@@ -481,7 +548,6 @@
         });
     }
 
-    // 渲染當前單詞 (根據 isPhonicMode 決定顯示word還是彩色phonic)
     function renderCurrentWord() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) {
             wordDisplayDiv.innerHTML = '🌸 點擊 Input 匯入單詞 🌸';
@@ -490,12 +556,10 @@
             updateTriangleVisibility();
             return;
         }
-        const realIndex = currentOrderIndices[currentIdx];
-        const item = wordsLibrary[realIndex];
+        const item = getCurrentItem();
         if (!item) return;
 
         if (isPhonicMode) {
-            // 顯示音標，並應用彩色
             const phonicRaw = item.phonic || '';
             if (phonicRaw.trim() === '') {
                 wordDisplayDiv.innerHTML = `<div class="phonic-colored" style="white-space: nowrap;">🔊 無音標</div>`;
@@ -503,9 +567,7 @@
                 wordDisplayDiv.innerHTML = colorizePhonic(phonicRaw);
             }
             wordDisplayDiv.style.whiteSpace = 'normal';
-            // 但父容器不換行已在card，內部div不換行即可
         } else {
-            // 顯示單詞 (純文字)
             const wordText = item.word || '???';
             wordDisplayDiv.innerHTML = escapeHtml(wordText);
             wordDisplayDiv.className = 'word-text';
@@ -515,52 +577,23 @@
         updateTriangleVisibility();
     }
 
-    // 播放語音 (根據當前單詞的audio，如果audio無效則用有道備援)
+    // ★ 替換為新的統一發音入口
     function speakCurrentWord() {
-        if (isTestMode) {
-            // 測驗模式關閉發音
-            return;
-        }
-        if (!wordsLibrary.length || currentOrderIndices.length === 0) return;
-        const realIndex = currentOrderIndices[currentIdx];
-        const item = wordsLibrary[realIndex];
-        if (!item) return;
-        const wordForAudio = item.word;
-        const audioUrl = item.audio && item.audio.trim() !== "" ? item.audio.trim() : null;
-        if (audioUrl) {
-            const audio = new Audio(audioUrl);
-            audio.play().catch(err => {
-                console.warn("音頻播放失敗，嘗試有道TTS", err);
-                fallbackTTS(wordForAudio);
-            });
-        } else {
-            fallbackTTS(wordForAudio);
-        }
+        if (isTestMode) return;
+        const item = getCurrentItem();
+        if (!item || !item.word) return;
+        speakText(item.word);
     }
 
-    function fallbackTTS(word) {
-        if (!word) return;
-        const encoded = encodeURIComponent(word);
-        const ttsUrl = `https://dict.youdao.com/dictvoice?type=0&audio=${encoded}`;
-        const audio = new Audio(ttsUrl);
-        audio.play().catch(e => console.warn("TTS失敗", e));
-    }
-
-    // Finish特效並重啟遊戲 (回到第一個單詞)
     let finishLock = false;
     function showFinishAndRestart() {
         if (finishLock) return;
         finishLock = true;
-        // 特效
         const toast = document.createElement('div');
         toast.className = 'finish-toast';
         toast.innerText = '🎉 Finish! 🎉';
         document.body.appendChild(toast);
-        setTimeout(() => {
-            if (toast && toast.remove) toast.remove();
-        }, 700);
-        
-        // 重新開始 (索引重置為0)
+        setTimeout(() => { if (toast && toast.remove) toast.remove(); }, 700);
         if (currentOrderIndices.length) {
             currentIdx = 0;
             renderCurrentWord();
@@ -568,15 +601,12 @@
         setTimeout(() => { finishLock = false; }, 800);
     }
 
-    // 下一個單詞邏輯 (最後一個觸發Finish並重置)
     function nextWord() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) return;
-        // 如果當前已經是最後一個單詞 => 觸發Finish特效，重置遊戲
         if (currentIdx === currentOrderIndices.length - 1) {
             showFinishAndRestart();
             return;
         }
-        // 正常下一個
         if (currentIdx + 1 < currentOrderIndices.length) {
             currentIdx++;
             renderCurrentWord();
@@ -591,60 +621,33 @@
         }
     }
 
-    // 切換隨機模式
     function toggleRandomMode() {
-        if (!wordsLibrary.length) {
-            alert("還沒有單詞！請先匯入 Excel ～ 💖");
-            return;
-        }
+        if (!wordsLibrary.length) { alert("還沒有單詞！請先匯入 Excel ～ 💖"); return; }
         isRandomMode = !isRandomMode;
-        if (isRandomMode) {
-            randomBtn.classList.add('active-mode');
-        } else {
-            randomBtn.classList.remove('active-mode');
-        }
-        // 重建順序陣列
+        randomBtn.classList.toggle('active-mode', isRandomMode);
         rebuildOrderIndices();
         currentIdx = 0;
         renderCurrentWord();
     }
 
-    // 切換 Phonic 模式 (顯示音標/單詞)
     function togglePhonicMode() {
-        if (!wordsLibrary.length) {
-            alert("沒有單詞資料，無法使用 Phonic 模式");
-            return;
-        }
+        if (!wordsLibrary.length) { alert("沒有單詞資料，無法使用 Phonic 模式"); return; }
         isPhonicMode = !isPhonicMode;
-        if (isPhonicMode) {
-            phonicBtn.classList.add('active-mode');
-        } else {
-            phonicBtn.classList.remove('active-mode');
-        }
+        phonicBtn.classList.toggle('active-mode', isPhonicMode);
         renderCurrentWord();
     }
 
-    // 切換 Test 模式
     function toggleTestMode() {
-        if (!wordsLibrary.length) {
-            alert("沒有單詞，請先匯入資料");
-            return;
-        }
+        if (!wordsLibrary.length) { alert("沒有單詞，請先匯入資料"); return; }
         isTestMode = !isTestMode;
-        if (isTestMode) {
-            testBtn.classList.add('active-mode');
-        } else {
-            testBtn.classList.remove('active-mode');
-        }
+        testBtn.classList.toggle('active-mode', isTestMode);
     }
 
-    // 儲存數據至 localStorage
     function saveToLocalStorage() {
         localStorage.setItem('sightWordsLibrary', JSON.stringify(wordsLibrary));
         localStorage.setItem('sightWordsMeta', JSON.stringify({ version: 1 }));
     }
 
-    // 加載本地數據
     function loadFromLocalStorage() {
         const stored = localStorage.getItem('sightWordsLibrary');
         if (stored) {
@@ -654,17 +657,17 @@
             } catch(e) { wordsLibrary = []; }
         }
         if (!wordsLibrary || wordsLibrary.length === 0) {
-            // 預設可愛範例數據
             wordsLibrary = [
                 { word: "Butterfly", audio: "", phonic: "ˈbʌtərflaɪ" },
                 { word: "Rainbow", audio: "", phonic: "ˈreɪnboʊ" },
                 { word: "Friend", audio: "", phonic: "frend" },
                 { word: "Love", audio: "", phonic: "lʌv" },
-                { word: "Happy", audio: "", phonic: "ˈhæpi" }
+                { word: "Happy", audio: "", phonic: "ˈhæpi" },
+                { word: "蝴蝶", audio: "", phonic: "" },
+                { word: "彩虹", audio: "", phonic: "" }
             ];
             saveToLocalStorage();
         }
-        // 初始化順序
         isRandomMode = false; isPhonicMode = false; isTestMode = false;
         randomBtn.classList.remove('active-mode');
         phonicBtn.classList.remove('active-mode');
@@ -672,9 +675,9 @@
         rebuildOrderIndices();
         currentIdx = 0;
         renderCurrentWord();
+        initVoices();   // 初始化 Web Speech API 語音
     }
 
-    // 解析Excel並匯入
     function importExcelData(file) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -682,18 +685,12 @@
             const workbook = XLSX.read(data, { type: 'array' });
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
-            if (!rows || rows.length < 2) {
-                alert("Excel 至少包含標題行和一行數據");
-                return;
-            }
+            if (!rows || rows.length < 2) { alert("Excel 至少包含標題行和一行數據"); return; }
             const headers = rows[0].map(cell => String(cell || "").trim().toLowerCase());
             const wordIdx = headers.findIndex(h => h.includes('word'));
             const audioIdx = headers.findIndex(h => h.includes('audio'));
             const phonicIdx = headers.findIndex(h => h.includes('phonic'));
-            if (wordIdx === -1) {
-                alert("Excel 需包含 'word' 列 (單詞)");
-                return;
-            }
+            if (wordIdx === -1) { alert("Excel 需包含 'word' 列 (單詞)"); return; }
             const newLibrary = [];
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
@@ -704,12 +701,8 @@
                 let phonic = (phonicIdx !== -1 && row[phonicIdx]) ? String(row[phonicIdx]).trim() : "";
                 newLibrary.push({ word, audio, phonic });
             }
-            if (newLibrary.length === 0) {
-                alert("沒有有效的單詞數據，請確保至少有一行單詞");
-                return;
-            }
+            if (newLibrary.length === 0) { alert("沒有有效的單詞數據"); return; }
             wordsLibrary = newLibrary;
-            // 重置所有模式
             isRandomMode = false; isPhonicMode = false; isTestMode = false;
             randomBtn.classList.remove('active-mode');
             phonicBtn.classList.remove('active-mode');
@@ -725,23 +718,18 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // 模態框
     function openModal() { modal.style.display = 'flex'; }
     function closeModal() { modal.style.display = 'none'; }
-    
-    // 文件選擇
+
     fileSelectLabel.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
-        if (fileInput.files && fileInput.files[0]) {
-            importExcelData(fileInput.files[0]);
-        }
+        if (fileInput.files && fileInput.files[0]) importExcelData(fileInput.files[0]);
         fileInput.value = '';
     });
     inputBtn.addEventListener('click', openModal);
     closeModalBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-    // 事件綁定
     leftBtn.addEventListener('click', prevWord);
     rightBtn.addEventListener('click', nextWord);
     phonicBtn.addEventListener('click', togglePhonicMode);
@@ -752,7 +740,6 @@
         speakCurrentWord();
     });
 
-    // 初始化
     loadFromLocalStorage();
 </script>
 </body>
