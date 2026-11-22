@@ -6,305 +6,45 @@
     <title>Sight Words</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #f3e0ff 0%, #e2c6ff 40%, #f9d6ff 100%);
-            font-family: 'Arial', '微软雅黑', 'Microsoft YaHei', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 30px 20px;
-            position: relative;
-        }
-
-        .deco-flower {
-            position: absolute;
-            font-size: 70px;
-            opacity: 0.25;
-            pointer-events: none;
-            z-index: 0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { min-height: 100vh; background: linear-gradient(135deg, #f3e0ff 0%, #e2c6ff 40%, #f9d6ff 100%); font-family: 'Arial', '微软雅黑', sans-serif; display: flex; justify-content: center; align-items: center; padding: 30px 20px; position: relative; }
+        .deco-flower { position: absolute; font-size: 70px; opacity: 0.25; pointer-events: none; z-index: 0; }
         .deco-1 { top: 20px; left: 20px; transform: rotate(-10deg); }
         .deco-2 { bottom: 20px; right: 25px; transform: rotate(15deg); }
         .deco-3 { top: 40%; right: 10px; font-size: 55px; opacity: 0.2; }
         .deco-4 { bottom: 15%; left: 15px; font-size: 60px; opacity: 0.2; }
-
-        .glass-card {
-            background: rgba(255, 245, 255, 0.55);
-            backdrop-filter: blur(12px);
-            border-radius: 70px;
-            padding: 30px 40px 50px;
-            box-shadow: 0 25px 45px rgba(128, 0, 128, 0.2), inset 0 1px 2px rgba(255,255,255,0.6);
-            border: 1px solid rgba(255, 220, 255, 0.7);
-            width: 100%;
-            max-width: 1100px;
-            transition: all 0.2s;
-            z-index: 2;
-        }
-
-        .title {
-            text-align: center;
-            font-family: 'Arial', '微软雅黑', sans-serif;
-            font-size: 48px;
-            font-weight: bold;
-            background: linear-gradient(125deg, #a3449e, #cf7fdb);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 35px;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 12px rgba(255,215,255,0.8);
-            position: relative;
-        }
-        .title::before {
-            content: "🌸";
-            font-size: 52px;
-            position: absolute;
-            left: 10%;
-            top: -8px;
-            opacity: 0.6;
-            background: none;
-            color: #ffb7e6;
-            text-shadow: none;
-        }
-        .title::after {
-            content: "💖";
-            font-size: 52px;
-            position: absolute;
-            right: 10%;
-            top: -8px;
-            opacity: 0.6;
-            background: none;
-            color: #ffb7e6;
-        }
-
-        .button-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 45px;
-            flex-wrap: wrap;
-            gap: 18px;
-        }
+        .glass-card { background: rgba(255, 245, 255, 0.55); backdrop-filter: blur(12px); border-radius: 70px; padding: 30px 40px 50px; box-shadow: 0 25px 45px rgba(128, 0, 128, 0.2), inset 0 1px 2px rgba(255,255,255,0.6); border: 1px solid rgba(255, 220, 255, 0.7); width: 100%; max-width: 1100px; transition: all 0.2s; z-index: 2; }
+        .title { text-align: center; font-family: 'Arial', '微软雅黑', sans-serif; font-size: 48px; font-weight: bold; background: linear-gradient(125deg, #a3449e, #cf7fdb); background-clip: text; -webkit-background-clip: text; color: transparent; margin-bottom: 35px; letter-spacing: 2px; text-shadow: 2px 2px 12px rgba(255,215,255,0.8); position: relative; }
+        .title::before { content: "🌸"; font-size: 52px; position: absolute; left: 10%; top: -8px; opacity: 0.6; background: none; color: #ffb7e6; text-shadow: none; }
+        .title::after { content: "💖"; font-size: 52px; position: absolute; right: 10%; top: -8px; opacity: 0.6; background: none; color: #ffb7e6; }
+        .button-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 45px; flex-wrap: wrap; gap: 18px; }
         .btn-group-left { display: flex; gap: 18px; }
         .btn-group-right { display: flex; gap: 18px; }
-
-        .cute-btn {
-            font-family: 'Arial', '微软雅黑', sans-serif;
-            font-size: 30px;
-            font-weight: bold;
-            background: rgba(255, 248, 255, 0.85);
-            backdrop-filter: blur(4px);
-            border: 2px solid #e3a9ff;
-            border-radius: 60px;
-            padding: 8px 28px;
-            color: #8a3b8c;
-            cursor: pointer;
-            transition: 0.15s;
-            box-shadow: 0 5px 0 #bc7ac2;
-            letter-spacing: 1px;
-        }
+        .cute-btn { font-family: 'Arial', '微软雅黑', sans-serif; font-size: 30px; font-weight: bold; background: rgba(255, 248, 255, 0.85); backdrop-filter: blur(4px); border: 2px solid #e3a9ff; border-radius: 60px; padding: 8px 28px; color: #8a3b8c; cursor: pointer; transition: 0.15s; box-shadow: 0 5px 0 #bc7ac2; letter-spacing: 1px; }
         .cute-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bc7ac2; }
-
-        .cute-btn.active-mode {
-            background: #d48bd9;
-            color: white;
-            border-color: #ffefb0;
-            box-shadow: 0 5px 0 #743c7a;
-            text-shadow: 0 1px 1px #5e2a64;
-        }
-
-        .word-navigation {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 25px;
-            flex-wrap: wrap;
-        }
-
-        .triangle-btn {
-            width: 75px;
-            height: 75px;
-            background: rgba(255, 215, 250, 0.9);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s;
-            box-shadow: 0 8px 0 #b169b0;
-            border: none;
-            font-size: 52px;
-            font-weight: bold;
-            color: #772e7a;
-            backdrop-filter: blur(4px);
-        }
+        .cute-btn.active-mode { background: #d48bd9; color: white; border-color: #ffefb0; box-shadow: 0 5px 0 #743c7a; text-shadow: 0 1px 1px #5e2a64; }
+        .word-navigation { display: flex; align-items: center; justify-content: center; gap: 25px; flex-wrap: wrap; }
+        .triangle-btn { width: 75px; height: 75px; background: rgba(255, 215, 250, 0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; box-shadow: 0 8px 0 #b169b0; border: none; font-size: 52px; font-weight: bold; color: #772e7a; backdrop-filter: blur(4px); }
         .triangle-btn:active { transform: translateY(3px); box-shadow: 0 4px 0 #b169b0; }
-        .triangle-btn.disabled-btn {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transform: none;
-        }
-
-        .word-card {
-            background: white;
-            border-radius: 70px;
-            min-width: 500px;
-            max-width: 800px;
-            width: auto;
-            padding: 35px 45px;
-            text-align: center;
-            box-shadow: 0 25px 35px rgba(112, 45, 112, 0.25);
-            border: 3px solid #ffc2f0;
-            cursor: pointer;
-            transition: 0.1s linear;
-            flex: 1;
-            overflow-x: auto;
-            white-space: nowrap;
-            scrollbar-width: thin;
-        }
+        .triangle-btn.disabled-btn { opacity: 0; visibility: hidden; pointer-events: none; transform: none; }
+        .word-card { background: white; border-radius: 70px; min-width: 500px; max-width: 800px; width: auto; padding: 35px 45px; text-align: center; box-shadow: 0 25px 35px rgba(112, 45, 112, 0.25); border: 3px solid #ffc2f0; cursor: pointer; transition: 0.1s linear; flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: thin; }
         .word-card::-webkit-scrollbar { height: 6px; background: #f1d6ff; border-radius: 10px; }
         .word-card::-webkit-scrollbar-thumb { background: #cb86d4; border-radius: 10px; }
-
-        .word-text {
-            font-family: 'Arial', '微软雅黑', 'Microsoft YaHei', sans-serif;
-            font-size: 80px;
-            font-weight: bold;
-            line-height: 1.2;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        .phonic-colored {
-            font-family: 'Arial', '微软雅黑', sans-serif;
-            font-size: 80px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .phonic-colored span {
-            display: inline-block;
-            font-size: inherit;
-            font-weight: bold;
-        }
-
-        .word-counter {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 22px;
-            font-weight: bold;
-            color: #b45fbf;
-            background: rgba(255,235,255,0.7);
-            display: inline-block;
-            width: auto;
-            padding: 5px 20px;
-            border-radius: 60px;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(90, 35, 100, 0.7);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: #fff7ff;
-            border-radius: 70px;
-            width: 90%;
-            max-width: 580px;
-            padding: 35px 30px;
-            text-align: center;
-            border: 4px solid #f0b5ff;
-            box-shadow: 0 20px 35px #4f2b54;
-        }
-        .modal-content h3 {
-            font-size: 38px;
-            color: #bc6fcf;
-            margin-bottom: 20px;
-            font-family: 'Arial', '微软雅黑';
-        }
-        .file-label {
-            background: #e7c2ff;
-            padding: 18px 20px;
-            border-radius: 60px;
-            font-size: 28px;
-            font-weight: bold;
-            color: #601f66;
-            cursor: pointer;
-            display: inline-block;
-            margin: 15px 0;
-            transition: 0.1s;
-        }
+        .word-text { font-family: 'Arial', '微软雅黑', 'Microsoft YaHei', sans-serif; font-size: 80px; font-weight: bold; line-height: 1.2; display: inline-block; white-space: nowrap; }
+        .phonic-colored { font-family: 'Arial', '微软雅黑', sans-serif; font-size: 80px; font-weight: bold; white-space: nowrap; }
+        .phonic-colored span { display: inline-block; font-size: inherit; font-weight: bold; }
+        .word-counter { text-align: center; margin-top: 20px; font-size: 22px; font-weight: bold; color: #b45fbf; background: rgba(255,235,255,0.7); display: inline-block; width: auto; padding: 5px 20px; border-radius: 60px; backdrop-filter: blur(4px); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(90, 35, 100, 0.7); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #fff7ff; border-radius: 70px; width: 90%; max-width: 580px; padding: 35px 30px; text-align: center; border: 4px solid #f0b5ff; box-shadow: 0 20px 35px #4f2b54; }
+        .modal-content h3 { font-size: 38px; color: #bc6fcf; margin-bottom: 20px; font-family: 'Arial', '微软雅黑'; }
+        .file-label { background: #e7c2ff; padding: 18px 20px; border-radius: 60px; font-size: 28px; font-weight: bold; color: #601f66; cursor: pointer; display: inline-block; margin: 15px 0; transition: 0.1s; }
         .file-label:active { background: #cf98e6; }
-        .modal-buttons {
-            margin-top: 25px;
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-        .modal-buttons button {
-            font-size: 28px;
-            padding: 8px 30px;
-            background: #e2b1ff;
-            border: none;
-            border-radius: 50px;
-            color: #3b1340;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .info-text {
-            font-size: 18px;
-            margin-top: 10px;
-            color: #a15caa;
-        }
-
-        .finish-toast {
-            position: fixed;
-            top: 45%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, #ffecb3, #ffc7f0);
-            color: #c24bd6;
-            font-size: 70px;
-            font-weight: bold;
-            padding: 30px 70px;
-            border-radius: 100px;
-            box-shadow: 0 0 45px #ffa3f0;
-            z-index: 1200;
-            white-space: nowrap;
-            border: 5px solid gold;
-            font-family: 'Arial', '微软雅黑';
-            text-align: center;
-            animation: fadeScale 0.4s ease forwards;
-            pointer-events: none;
-        }
-        @keyframes fadeScale {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6);}
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1);}
-            80% { opacity: 1; transform: translate(-50%, -50%) scale(1);}
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); visibility: hidden;}
-        }
-
-        @media (max-width: 780px) {
-            .glass-card { padding: 25px 20px; }
-            .word-card { min-width: 260px; padding: 20px 25px; }
-            .word-text, .phonic-colored { font-size: 48px; }
-            .cute-btn { font-size: 22px; padding: 5px 18px; }
-            .triangle-btn { width: 58px; height: 58px; font-size: 40px; }
-            .title { font-size: 38px; }
-        }
+        .modal-buttons { margin-top: 25px; display: flex; gap: 20px; justify-content: center; }
+        .modal-buttons button { font-size: 28px; padding: 8px 30px; background: #e2b1ff; border: none; border-radius: 50px; color: #3b1340; font-weight: bold; cursor: pointer; }
+        .info-text { font-size: 18px; margin-top: 10px; color: #a15caa; }
+        .finish-toast { position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle, #ffecb3, #ffc7f0); color: #c24bd6; font-size: 70px; font-weight: bold; padding: 30px 70px; border-radius: 100px; box-shadow: 0 0 45px #ffa3f0; z-index: 1200; white-space: nowrap; border: 5px solid gold; font-family: 'Arial', '微软雅黑'; text-align: center; animation: fadeScale 0.4s ease forwards; pointer-events: none; }
+        @keyframes fadeScale { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6);} 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1);} 80% { opacity: 1; transform: translate(-50%, -50%) scale(1);} 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); visibility: hidden;} }
+        @media (max-width: 780px) { .glass-card { padding: 25px 20px; } .word-card { min-width: 260px; padding: 20px 25px; } .word-text, .phonic-colored { font-size: 48px; } .cute-btn { font-size: 22px; padding: 5px 18px; } .triangle-btn { width: 58px; height: 58px; font-size: 40px; } .title { font-size: 38px; } }
     </style>
 </head>
 <body>
@@ -316,28 +56,20 @@
 
 <div class="glass-card">
     <div class="title">Sight Words</div>
-
     <div class="button-bar">
-        <div class="btn-group-left">
-            <button class="cute-btn" id="inputBtn">📂 Input</button>
-        </div>
+        <div class="btn-group-left"><button class="cute-btn" id="inputBtn">📂 Input</button></div>
         <div class="btn-group-right">
             <button class="cute-btn" id="phonicBtn">🔊 Phonic</button>
             <button class="cute-btn" id="randomBtn">🎲 Random</button>
             <button class="cute-btn" id="testBtn">✏️ Test</button>
         </div>
     </div>
-
     <div class="word-navigation">
         <div class="triangle-btn" id="leftTriangleBtn">◀</div>
-        <div class="word-card" id="wordCard">
-            <div id="wordDisplay" class="word-text">✨ 單詞 ✨</div>
-        </div>
+        <div class="word-card" id="wordCard"><div id="wordDisplay" class="word-text">✨ 單詞 ✨</div></div>
         <div class="triangle-btn" id="rightTriangleBtn">▶</div>
     </div>
-    <div style="text-align: center; margin-top: 20px;">
-        <div class="word-counter" id="counterDisplay"></div>
-    </div>
+    <div style="text-align: center; margin-top: 20px;"><div class="word-counter" id="counterDisplay"></div></div>
 </div>
 
 <div id="excelModal" class="modal">
@@ -347,9 +79,7 @@
         <label class="file-label" id="fileSelectLabel">📂 選擇 .xlsx / .xls 文件</label>
         <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" style="display: none;">
         <div class="info-text">💡 若無上傳，將保留原有單詞庫</div>
-        <div class="modal-buttons">
-            <button id="closeModalBtn">關閉</button>
-        </div>
+        <div class="modal-buttons"><button id="closeModalBtn">關閉</button></div>
     </div>
 </div>
 
@@ -376,109 +106,155 @@
     const fileSelectLabel = document.getElementById('fileSelectLabel');
 
     // ============================================================
-    // 發音核心：中英文自動判斷 + 有道優先 / Web Speech API 回退
+    // 發音核心：iOS Safari 兼容版
     // ============================================================
 
-    const HAS_CHINESE = /[\u4E00-\u9FA5]|[\uFE30-\uFFA0]/;  // 中文字符檢測
+    const HAS_CHINESE = /[\u4E00-\u9FA5]|[\uFE30-\uFFA0]/;
     let voicesLoaded = false;
     let cachedVoices = [];
+    let speechUnlocked = false;   // 是否已經用真實手勢解鎖 speechSynthesis
 
-    // 預載語音列表（必須等 voiceschanged）
+    // 轮询兜底：iOS Safari 首次交互后才会加载语音列表
     function initVoices() {
         if (!('speechSynthesis' in window)) return;
-        function loadVoices() {
-            cachedVoices = speechSynthesis.getVoices();
-            voicesLoaded = cachedVoices.length > 0;
-        }
-        loadVoices();
-        speechSynthesis.onvoiceschanged = loadVoices;
+
+        const load = () => {
+            const v = speechSynthesis.getVoices();
+            if (v && v.length > 0) {
+                cachedVoices = v;
+                voicesLoaded = true;
+            }
+        };
+
+        load();                                 // 桌面浏览器可能立即有值
+        speechSynthesis.onvoiceschanged = load; // 标准异步通知
+
+        // iOS Safari 首次 getVoices() 可能永远不触发 voiceschanged，
+        // 用 2s 轮询兜底，直到拿到非空列表
+        let tries = 0;
+        const timer = setInterval(() => {
+            tries++;
+            load();
+            if (voicesLoaded || tries >= 10) clearInterval(timer);
+        }, 500);
     }
 
-    // 根據語言挑選最佳語音（不硬編碼索引，按 lang 篩選 + 關鍵詞回退）
-    function pickVoice(langPrefix) {
+    // ★ 关键：用真实点击事件同步执行一次空的 speak()，彻底解锁 iOS 音频会话
+    // 参考 StackOverflow 已验证的 workaround：在 click handler 中立即 speak 空字符串
+    function unlockSpeech() {
+        if (speechUnlocked) return;
+        if (!('speechSynthesis' in window)) return;
+        try {
+            speechSynthesis.cancel();
+            const dummy = new SpeechSynthesisUtterance('');
+            dummy.volume = 0;
+            speechSynthesis.speak(dummy);
+            speechUnlocked = true;
+            // 解鎖後語音列表可能才開始加載，再主動拉一次
+            setTimeout(initVoices, 100);
+        } catch (e) { /* 靜默 */ }
+    }
+
+    // 精確挑選 voice：優先完全匹配 lang，其次語言前綴，最後名稱關鍵詞
+    // ★ 重點：返回 null 時必須讓調用方知道「沒有可用 voice」，而不是貿然 speak
+    function pickVoice(lang) {
         if (!voicesLoaded) cachedVoices = speechSynthesis.getVoices();
         const voices = cachedVoices;
-        // 先精確匹配 lang（如 zh-CN / en-US）
-        let found = voices.find(v => v.lang === langPrefix);
-        // 再放寬到語言前綴（zh / en）
-        if (!found) found = voices.find(v => v.lang.startsWith(langPrefix.split('-')[0]));
-        // 最後按名稱關鍵詞回退
+        if (!voices || voices.length === 0) return null;
+
+        // 1) 完全匹配（en-US / zh-CN）
+        let found = voices.find(v => v.lang === lang && v.localService);
+        if (!found) found = voices.find(v => v.lang === lang);
+
+        // 2) 語言前綴匹配（en / zh），優先本地語音
         if (!found) {
-            const keyword = langPrefix.startsWith('zh') ? /chinese|中文|國語/i : /english|英文/i;
-            found = voices.find(v => keyword.test(v.name));
+            const prefix = lang.split('-')[0];
+            found = voices.find(v => v.lang.startsWith(prefix) && v.localService);
+            if (!found) found = voices.find(v => v.lang.startsWith(prefix));
         }
+
+        // 3) 名稱關鍵詞回退
+        if (!found) {
+            const kw = lang.startsWith('zh') ? /Chinese|中文|國語|普通话|Tingting|Meijia/i
+                                              : /English|英文|Samantha|Alex|Daniel|Karen/i;
+            found = voices.find(v => kw.test(v.name));
+        }
+
         return found || null;
     }
 
-    // Web Speech API 發音（自動根據文本判斷 zh-CN / en-US）
+    // Web Speech API 發音（必須在同步用戶手勢鏈中調用，或已解鎖後）
     function speakWithWebSpeech(text) {
-        if (!('speechSynthesis' in window)) {
-            console.warn('瀏覽器不支援 Web Speech API');
-            return;
-        }
-        // 先取消正在播放的語音，避免重疊
-        speechSynthesis.cancel();
+        if (!('speechSynthesis' in window) || !text) return;
 
         const isChinese = HAS_CHINESE.test(text);
         const lang = isChinese ? 'zh-CN' : 'en-US';
 
+        // iOS Safari：如果還沒有可用的 voice，且文本是英文，不要靜默地 speak
+        const voice = pickVoice(lang);
+        if (!voice && !isChinese) {
+            // 英文沒有找到 voice：可能語音包未下載或列表未就緒
+            // 給用戶一個溫和提示，而不是完全沒反應
+            console.warn(`未找到 ${lang} 語音，請確認裝置已下載英文語音包`);
+        }
+
+        speechSynthesis.cancel();  // iOS 必須先清空隊列，否則新 speak 可能被吞
+
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;                 // 必須在 speak 之前設置
-        utterance.rate = isChinese ? 0.9 : 0.85;   // 中文稍慢更自然
+        utterance.lang = lang;
+        utterance.rate = isChinese ? 0.9 : 0.85;
         utterance.pitch = isChinese ? 0.8 : 1;
         utterance.volume = 1;
-
-        const voice = pickVoice(lang);
-        if (voice) utterance.voice = voice;
+        if (voice) utterance.voice = voice;   // ★ Safari 必須同時設 voice，否則可能靜默失敗
 
         speechSynthesis.speak(utterance);
     }
 
-    // 有道 TTS（僅英文使用；中文直接走 Web Speech）
-    function speakWithYoudao(text) {
-        return new Promise((resolve, reject) => {
-            const encoded = encodeURIComponent(text);
-            const ttsUrl = `https://dict.youdao.com/dictvoice?type=0&audio=${encoded}`;
-            const audio = new Audio(ttsUrl);
-            audio.play().then(resolve).catch(reject);
-        });
-    }
-
-    // 統一發音入口
-    function speakText(text) {
-        if (!text || !text.trim()) return;
-
-        // 中文：一律 Web Speech API（有道對中文長句/生僻詞不穩定）
-        if (HAS_CHINESE.test(text)) {
-            speakWithWebSpeech(text);
-            return;
-        }
-
-        // 英文：有音檔先播音檔，失敗則回退 Web Speech
-        const item = getCurrentItem();
-        const audioUrl = item && item.audio && item.audio.trim() !== '' ? item.audio.trim() : null;
-
-        if (audioUrl) {
-            const audio = new Audio(audioUrl);
-            audio.play().catch(() => {
-                // 音檔播放失敗（含長單詞無音檔）→ Web Speech API 接手
-                speakWithWebSpeech(text);
-            });
-        } else {
-            // 沒有自訂音檔：直接用 Web Speech API，
-            // 不再走有道（有道對長英文單詞常常沒有發音）
-            speakWithWebSpeech(text);
-        }
-    }
-
-    // 獲取當前單詞物件
     function getCurrentItem() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) return null;
         return wordsLibrary[currentOrderIndices[currentIdx]] || null;
     }
 
+    // ★ 核心改動：英文路徑不再走 audio.play().catch() 的異步陷阱
+    // 同步判斷：有 audio → 播放；但播放失敗的處理放在 end 事件或獨立 try/catch 中，
+    // 不再在異步 catch 裡直接 speak()（Safari 會攔截）
+    function speakText(text) {
+        if (!text || !text.trim()) return;
+        const item = getCurrentItem();
+        const audioUrl = item && item.audio && item.audio.trim() !== '' ? item.audio.trim() : null;
+
+        // 中文：直接同步 Web Speech
+        if (HAS_CHINESE.test(text)) {
+            speakWithWebSpeech(text);
+            return;
+        }
+
+        // 英文：有音檔先播音檔
+        if (audioUrl) {
+            try {
+                const audio = new Audio(audioUrl);
+                audio.play().catch(() => {
+                    // 注意：這裡是異步，Safari 可能不允許 speak
+                    // 所以不要在這裡直接調 speakWithWebSpeech
+                    // 改為：如果 Web Speech 已經在之前的用戶手勢中解鎖過，
+                    // 才嘗試 speak；否則靜默失敗（用戶再次點擊卡片即可走無音檔路徑）
+                    if (speechUnlocked) {
+                        speakWithWebSpeech(text);
+                    }
+                });
+                return;
+            } catch (e) {
+                // Audio 建構失敗，繼續走 Web Speech
+            }
+        }
+
+        // 沒有音檔，或 Audio 建構失敗：直接 Web Speech
+        // 這個分支是在用戶點擊卡片的同步上下文中執行的（speakCurrentWord 被 click 直接調用）
+        speakWithWebSpeech(text);
+    }
+
     // ============================================================
-    // 原有邏輯保持不變（僅替換 speakCurrentWord）
+    // 原有邏輯
     // ============================================================
 
     function rebuildOrderIndices() {
@@ -496,29 +272,19 @@
         }
     }
 
-    function resetToFirst() {
-        if (!currentOrderIndices.length) return;
-        currentIdx = 0;
-        renderCurrentWord();
-    }
-
     function updateTriangleVisibility() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) {
             leftBtn.classList.add('disabled-btn');
             rightBtn.classList.add('disabled-btn');
             return;
         }
-        if (currentIdx === 0) leftBtn.classList.add('disabled-btn');
-        else leftBtn.classList.remove('disabled-btn');
+        leftBtn.classList.toggle('disabled-btn', currentIdx === 0);
         rightBtn.classList.remove('disabled-btn');
     }
 
     function updateCounter() {
-        if (wordsLibrary.length && currentOrderIndices.length) {
-            counterSpan.innerText = `${currentIdx + 1} / ${currentOrderIndices.length}`;
-        } else {
-            counterSpan.innerText = `0 / 0`;
-        }
+        counterSpan.innerText = (wordsLibrary.length && currentOrderIndices.length)
+            ? `${currentIdx + 1} / ${currentOrderIndices.length}` : `0 / 0`;
     }
 
     function colorizePhonic(phonicStr) {
@@ -526,62 +292,52 @@
         let result = '';
         for (let ch of phonicStr) {
             const lower = ch.toLowerCase();
-            if ('aeiou'.includes(lower)) {
-                result += `<span style="color:#e34234; font-weight:bold;">${escapeHtml(ch)}</span>`;
-            } else if (ch === '-') {
-                result += `<span style="color:#b0b0b0;">-</span>`;
-            } else if (/[a-zA-Z]/.test(ch)) {
-                result += `<span style="color:#3a6ea5; font-weight:bold;">${escapeHtml(ch)}</span>`;
-            } else {
-                result += `<span style="color:#5f5b6e;">${escapeHtml(ch)}</span>`;
-            }
+            if ('aeiou'.includes(lower)) result += `<span style="color:#e34234; font-weight:bold;">${escapeHtml(ch)}</span>`;
+            else if (ch === '-') result += `<span style="color:#b0b0b0;">-</span>`;
+            else if (/[a-zA-Z]/.test(ch)) result += `<span style="color:#3a6ea5; font-weight:bold;">${escapeHtml(ch)}</span>`;
+            else result += `<span style="color:#5f5b6e;">${escapeHtml(ch)}</span>`;
         }
         return `<div class="phonic-colored" style="white-space: nowrap;">${result}</div>`;
     }
 
     function escapeHtml(str) {
-        return String(str).replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+        return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     }
 
     function renderCurrentWord() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) {
             wordDisplayDiv.innerHTML = '🌸 點擊 Input 匯入單詞 🌸';
             wordDisplayDiv.className = 'word-text';
-            updateCounter();
-            updateTriangleVisibility();
-            return;
+            updateCounter(); updateTriangleVisibility(); return;
         }
         const item = getCurrentItem();
         if (!item) return;
 
         if (isPhonicMode) {
             const phonicRaw = item.phonic || '';
-            if (phonicRaw.trim() === '') {
-                wordDisplayDiv.innerHTML = `<div class="phonic-colored" style="white-space: nowrap;">🔊 無音標</div>`;
-            } else {
-                wordDisplayDiv.innerHTML = colorizePhonic(phonicRaw);
-            }
+            wordDisplayDiv.innerHTML = phonicRaw.trim() === ''
+                ? `<div class="phonic-colored" style="white-space: nowrap;">🔊 無音標</div>`
+                : colorizePhonic(phonicRaw);
             wordDisplayDiv.style.whiteSpace = 'normal';
         } else {
-            const wordText = item.word || '???';
-            wordDisplayDiv.innerHTML = escapeHtml(wordText);
+            wordDisplayDiv.innerHTML = escapeHtml(item.word || '???');
             wordDisplayDiv.className = 'word-text';
             wordDisplayDiv.style.whiteSpace = 'nowrap';
         }
-        updateCounter();
-        updateTriangleVisibility();
+        updateCounter(); updateTriangleVisibility();
     }
 
-    // ★ 替換為新的統一發音入口
+    // ★ 關鍵：speakCurrentWord 由 click 事件直接調用，處於同步用戶手勢上下文中
     function speakCurrentWord() {
         if (isTestMode) return;
         const item = getCurrentItem();
         if (!item || !item.word) return;
+
+        // 每次點擊卡片，先確保解鎖（第一次點擊會執行空 speak 解鎖）
+        unlockSpeech();
+
+        // 然後再發音。注意：unlockSpeech 中的 speak 是異步排隊的，
+        // 但 unlockSpeech 本身是同步執行的，Safari 會認可這是用戶手勢觸發。
         speakText(item.word);
     }
 
@@ -594,40 +350,26 @@
         toast.innerText = '🎉 Finish! 🎉';
         document.body.appendChild(toast);
         setTimeout(() => { if (toast && toast.remove) toast.remove(); }, 700);
-        if (currentOrderIndices.length) {
-            currentIdx = 0;
-            renderCurrentWord();
-        }
+        if (currentOrderIndices.length) { currentIdx = 0; renderCurrentWord(); }
         setTimeout(() => { finishLock = false; }, 800);
     }
 
     function nextWord() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) return;
-        if (currentIdx === currentOrderIndices.length - 1) {
-            showFinishAndRestart();
-            return;
-        }
-        if (currentIdx + 1 < currentOrderIndices.length) {
-            currentIdx++;
-            renderCurrentWord();
-        }
+        if (currentIdx === currentOrderIndices.length - 1) { showFinishAndRestart(); return; }
+        if (currentIdx + 1 < currentOrderIndices.length) { currentIdx++; renderCurrentWord(); }
     }
 
     function prevWord() {
         if (!wordsLibrary.length || currentOrderIndices.length === 0) return;
-        if (currentIdx > 0) {
-            currentIdx--;
-            renderCurrentWord();
-        }
+        if (currentIdx > 0) { currentIdx--; renderCurrentWord(); }
     }
 
     function toggleRandomMode() {
         if (!wordsLibrary.length) { alert("還沒有單詞！請先匯入 Excel ～ 💖"); return; }
         isRandomMode = !isRandomMode;
         randomBtn.classList.toggle('active-mode', isRandomMode);
-        rebuildOrderIndices();
-        currentIdx = 0;
-        renderCurrentWord();
+        rebuildOrderIndices(); currentIdx = 0; renderCurrentWord();
     }
 
     function togglePhonicMode() {
@@ -651,10 +393,8 @@
     function loadFromLocalStorage() {
         const stored = localStorage.getItem('sightWordsLibrary');
         if (stored) {
-            try {
-                wordsLibrary = JSON.parse(stored);
-                if (!Array.isArray(wordsLibrary)) wordsLibrary = [];
-            } catch(e) { wordsLibrary = []; }
+            try { wordsLibrary = JSON.parse(stored); if (!Array.isArray(wordsLibrary)) wordsLibrary = []; }
+            catch(e) { wordsLibrary = []; }
         }
         if (!wordsLibrary || wordsLibrary.length === 0) {
             wordsLibrary = [
@@ -672,10 +412,8 @@
         randomBtn.classList.remove('active-mode');
         phonicBtn.classList.remove('active-mode');
         testBtn.classList.remove('active-mode');
-        rebuildOrderIndices();
-        currentIdx = 0;
-        renderCurrentWord();
-        initVoices();   // 初始化 Web Speech API 語音
+        rebuildOrderIndices(); currentIdx = 0; renderCurrentWord();
+        initVoices();
     }
 
     function importExcelData(file) {
@@ -697,9 +435,11 @@
                 if (!row || row.length === 0) continue;
                 let word = row[wordIdx] ? String(row[wordIdx]).trim() : "";
                 if (word === "") continue;
-                let audio = (audioIdx !== -1 && row[audioIdx]) ? String(row[audioIdx]).trim() : "";
-                let phonic = (phonicIdx !== -1 && row[phonicIdx]) ? String(row[phonicIdx]).trim() : "";
-                newLibrary.push({ word, audio, phonic });
+                newLibrary.push({
+                    word,
+                    audio: (audioIdx !== -1 && row[audioIdx]) ? String(row[audioIdx]).trim() : "",
+                    phonic: (phonicIdx !== -1 && row[phonicIdx]) ? String(row[phonicIdx]).trim() : ""
+                });
             }
             if (newLibrary.length === 0) { alert("沒有有效的單詞數據"); return; }
             wordsLibrary = newLibrary;
@@ -707,9 +447,7 @@
             randomBtn.classList.remove('active-mode');
             phonicBtn.classList.remove('active-mode');
             testBtn.classList.remove('active-mode');
-            rebuildOrderIndices();
-            currentIdx = 0;
-            renderCurrentWord();
+            rebuildOrderIndices(); currentIdx = 0; renderCurrentWord();
             saveToLocalStorage();
             alert(`成功匯入 ${wordsLibrary.length} 個單詞！✨`);
             closeModal();
@@ -735,6 +473,8 @@
     phonicBtn.addEventListener('click', togglePhonicMode);
     randomBtn.addEventListener('click', toggleRandomMode);
     testBtn.addEventListener('click', toggleTestMode);
+
+    // ★ 卡片點擊：這是唯一需要發聲的用戶手勢入口
     wordCardArea.addEventListener('click', (e) => {
         e.stopPropagation();
         speakCurrentWord();
