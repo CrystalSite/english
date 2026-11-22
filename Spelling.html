@@ -18,7 +18,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px; /* 稍微加寬以容納長單字 */
+            max-width: 900px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -73,7 +73,7 @@
             cursor: pointer;
             margin: 0 auto 20px;
             padding: 0;
-            display: none; /* 初始隱藏，導入後顯示 */
+            display: none;
         }
 
         .play-button:hover { transform: scale(1.1); }
@@ -356,7 +356,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // 移除預設單字，初始為空
         let wordPool = [];
 
         // Game state
@@ -369,60 +368,85 @@
         let currentWord = null;
         
         // 音效與發音相關
-        let audio = new Audio(); // 用於有道字典音頻
+        let audio = new Audio();
         let correctAudio = new Audio("https://dict.youdao.com/dictvoice?type=0&audio=great");
         let wrongAudio = new Audio("https://dict.youdao.com/dictvoice?type=0&audio=oh%20no");
 
-        // 語音合成 API (Web Speech API 備用方案)
+        // 語音合成 API
         const synth = window.speechSynthesis;
         let englishVoice = null;
 
+        // 【關鍵修正 1】異步加載語音列表，確保獲取到英語語音
         function loadVoices() {
             const voices = synth.getVoices();
-            englishVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB') || voices.find(v => v.lang.includes('en'));
+            if (voices.length > 0) {
+                englishVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB') 
+                            || voices.find(v => v.lang.includes('en'));
+            }
         }
-        synth.onvoiceschanged = loadVoices;
+        // 監聽 voiceschanged 事件，這是 iOS Safari 加載語音的觸發點
+        if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
         loadVoices();
+
+        // 【關鍵修正 2】手勢解鎖：在用戶點擊時觸發一次空白語音，解鎖後續的異步播放權限
+        function unlockSpeech() {
+            if (synth) {
+                synth.cancel(); // 先清空可能卡住的隊列
+                const utterance = new SpeechSynthesisUtterance('');
+                utterance.volume = 0; // 靜音，不發出聲音
+                synth.speak(utterance);
+            }
+        }
 
         // 備用發音：Web Speech API
         function speakWordFallback(text) {
             if (!synth || !text) return;
+            
+            // 【關鍵修正 3】每次播放前先 cancel，防止 iOS 隊列卡死
             synth.cancel();
+            
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
             utterance.rate = 0.85;
             if (englishVoice) utterance.voice = englishVoice;
 
-            utterance.onstart = () => playBtn.classList.add('pulse');
-            utterance.onend = () => playBtn.classList.remove('pulse');
-            utterance.onerror = () => playBtn.classList.remove('pulse');
+            utterance.onstart = () => {
+                playBtn.classList.add('pulse');
+                console.log("Web Speech API 開始播放:", text);
+            };
+            utterance.onend = () => {
+                playBtn.classList.remove('pulse');
+                console.log("Web Speech API 播放結束");
+            };
+            // 【關鍵修正 4】添加 onerror 監聽，方便調試是否被靜默攔截
+            utterance.onerror = (e) => {
+                playBtn.classList.remove('pulse');
+                console.warn("Web Speech API 錯誤:", e.error);
+            };
             
             synth.speak(utterance);
-            console.log("觸發 Web Speech API 備用發音:", text);
         }
 
         // 核心發音邏輯：優先有道，失敗則 Web Speech API
         function playPronounciation(text) {
             if (!text) return;
             
-            // 停止所有發音
             synth.cancel();
             audio.pause();
             
-            // 建立有道字典連結
             const url = `https://dict.youdao.com/dictvoice?type=0&audio=${encodeURIComponent(text)}`;
             audio.src = url;
             
             playBtn.classList.add('pulse');
             
-            // 設置錯誤回調：當有道的連結失效（如 400/404/網絡錯誤）時觸發
             audio.onerror = () => {
                 console.warn("有道音頻失效，切換至 Web Speech API:", text);
                 playBtn.classList.remove('pulse');
                 speakWordFallback(text);
             };
 
-            // 播放並捕捉 Promise 錯誤
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
@@ -434,7 +458,6 @@
                 });
             }
             
-            // 播放結束時移除動畫
             audio.onended = () => {
                 playBtn.classList.remove('pulse');
             };
@@ -527,7 +550,6 @@
             phonicsEl.classList.remove('show');
             setupLetterSelection();
             
-            // 自動發音（調用混合模式）
             setTimeout(() => { playPronounciation(currentWord.word); }, 100);
         }
 
@@ -546,7 +568,7 @@
             allLetters.forEach((letter, index) => {
                 const letterEl = document.createElement('div');
                 letterEl.className = 'letter';
-                letterEl.textContent = letter === ' ' ? '' : letter; // 空白字母塊
+                letterEl.textContent = letter === ' ' ? '' : letter;
                 letterEl.dataset.index = index;
                 letterEl.addEventListener('click', () => {
                     selectLetter(letterEl, letter);
@@ -594,7 +616,7 @@
             selectedLetters.forEach((item) => {
                 const letterEl = document.createElement('div');
                 letterEl.className = 'selected-letter';
-                letterEl.textContent = item.letter === ' ' ? '' : item.letter; // 上方也是空白
+                letterEl.textContent = item.letter === ' ' ? '' : item.letter;
                 letterEl.addEventListener('click', () => {
                     item.element.style.display = 'flex';
                     selectedLetters = selectedLetters.filter(l => l !== item);
@@ -643,7 +665,6 @@
                 setTimeout(() => {
                     feedbackEl.textContent = '';
                     setupLetterSelection();
-                    // 答錯後重播（調用混合模式）
                     setTimeout(() => { playPronounciation(currentWord.word); }, 100);
                 }, 1500);
             }
@@ -711,7 +732,7 @@
                             progressContainer.style.display = 'none';
                             
                             if (remainingWords.length > 0) {
-                                showGameUI(); // 導入成功後顯示遊戲介面
+                                showGameUI();
                                 loadWord();
                             } else {
                                 showEmptyUI();
@@ -741,7 +762,9 @@
                 else alert("目前沒有單字記錄！");
             });
             
+            // 【關鍵修正 5】點擊 Input 按鈕時，立即解鎖語音權限
             inputBtn.addEventListener('click', () => {
+                unlockSpeech(); 
                 fileInput.click();
             });
             
