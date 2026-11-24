@@ -133,15 +133,22 @@
             position: relative;
         }
 
+        /* 已選字母區：設置 flex 與 按詞分組 */
         .selected-letters {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px; /* 詞與詞、詞與空格之間的間距 */
             margin-bottom: 10px;
             min-height: 60px;
             align-items: flex-end;
             width: 100%;
+        }
+
+        /* 每個單字的分組，保證單字不會被切斷換行 */
+        .word-group {
+            display: flex;
+            gap: 8px; /* 單字內字母的間距 */
         }
 
         .letter-container {
@@ -376,26 +383,45 @@
         const synth = window.speechSynthesis;
         let englishVoice = null;
 
-        // 【關鍵修正 1】異步加載語音列表，確保獲取到英語語音
+        // 異步加載語音列表，優先選取女聲
         function loadVoices() {
             const voices = synth.getVoices();
             if (voices.length > 0) {
-                englishVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB') 
-                            || voices.find(v => v.lang.includes('en'));
+                const femaleKeywords = ['samantha', 'victoria', 'karen', 'moira', 'tessa', 'zira', 'google us english'];
+                
+                let preferredVoice = voices.find(v => 
+                    v.lang.startsWith('en') && 
+                    femaleKeywords.some(keyword => v.name.toLowerCase().includes(keyword))
+                );
+
+                if (!preferredVoice) {
+                    preferredVoice = voices.find(v => 
+                        v.lang.startsWith('en') && 
+                        v.name.toLowerCase().includes('female')
+                    );
+                }
+
+                if (!preferredVoice) {
+                    preferredVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en-GB') 
+                                 || voices.find(v => v.lang.startsWith('en'));
+                }
+                
+                englishVoice = preferredVoice;
+                console.log("已選擇的語音包:", englishVoice ? englishVoice.name : "預設");
             }
         }
-        // 監聽 voiceschanged 事件，這是 iOS Safari 加載語音的觸發點
+        
         if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
         }
         loadVoices();
 
-        // 【關鍵修正 2】手勢解鎖：在用戶點擊時觸發一次空白語音，解鎖後續的異步播放權限
+        // 手勢解鎖
         function unlockSpeech() {
             if (synth) {
-                synth.cancel(); // 先清空可能卡住的隊列
+                synth.cancel();
                 const utterance = new SpeechSynthesisUtterance('');
-                utterance.volume = 0; // 靜音，不發出聲音
+                utterance.volume = 0;
                 synth.speak(utterance);
             }
         }
@@ -404,7 +430,6 @@
         function speakWordFallback(text) {
             if (!synth || !text) return;
             
-            // 【關鍵修正 3】每次播放前先 cancel，防止 iOS 隊列卡死
             synth.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
@@ -412,15 +437,8 @@
             utterance.rate = 0.85;
             if (englishVoice) utterance.voice = englishVoice;
 
-            utterance.onstart = () => {
-                playBtn.classList.add('pulse');
-                console.log("Web Speech API 開始播放:", text);
-            };
-            utterance.onend = () => {
-                playBtn.classList.remove('pulse');
-                console.log("Web Speech API 播放結束");
-            };
-            // 【關鍵修正 4】添加 onerror 監聽，方便調試是否被靜默攔截
+            utterance.onstart = () => playBtn.classList.add('pulse');
+            utterance.onend = () => playBtn.classList.remove('pulse');
             utterance.onerror = (e) => {
                 playBtn.classList.remove('pulse');
                 console.warn("Web Speech API 錯誤:", e.error);
@@ -436,25 +454,24 @@
             synth.cancel();
             audio.pause();
             
-            const url = `https://dict.youdao.com/dictvoice?type=0&audio=${encodeURIComponent(text)}`;
-            audio.src = url;
-            
-            playBtn.classList.add('pulse');
-            
-            audio.onerror = () => {
-                console.warn("有道音頻失效，切換至 Web Speech API:", text);
+            let hasFallenBack = false;
+            const triggerFallback = () => {
+                if (hasFallenBack) return;
+                hasFallenBack = true;
                 playBtn.classList.remove('pulse');
                 speakWordFallback(text);
             };
 
+            const url = `https://dict.youdao.com/dictvoice?type=0&audio=${encodeURIComponent(text)}`;
+            audio.src = url;
+            playBtn.classList.add('pulse');
+            
+            audio.onerror = triggerFallback;
+
             const playPromise = audio.play();
             if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    // 播放成功
-                }).catch(error => {
-                    console.warn("有道教音頻播放被拒絕或出錯，切換至 Web Speech API:", error);
-                    playBtn.classList.remove('pulse');
-                    speakWordFallback(text);
+                playPromise.catch(() => {
+                    triggerFallback();
                 });
             }
             
@@ -611,20 +628,54 @@
             }
         }
 
+        // 修正：空格在答案區顯示為一個帶邊框的空白格子，並支援點擊退回
         function updateSelectedLetters() {
             selectedLettersEl.innerHTML = '';
+            
+            let currentWordGroup = document.createElement('div');
+            currentWordGroup.className = 'word-group';
+            
             selectedLetters.forEach((item) => {
-                const letterEl = document.createElement('div');
-                letterEl.className = 'selected-letter';
-                letterEl.textContent = item.letter === ' ' ? '' : item.letter;
-                letterEl.addEventListener('click', () => {
-                    item.element.style.display = 'flex';
-                    selectedLetters = selectedLetters.filter(l => l !== item);
-                    updateSelectedLetters();
-                    phonicsEl.classList.remove('show');
-                });
-                selectedLettersEl.appendChild(letterEl);
+                if (item.letter === ' ') {
+                    // 如果當前單字組有字母，先加入容器
+                    if (currentWordGroup.children.length > 0) {
+                        selectedLettersEl.appendChild(currentWordGroup);
+                        currentWordGroup = document.createElement('div');
+                        currentWordGroup.className = 'word-group';
+                    }
+                    
+                    // 創建一個具有 selected-letter 樣式的空白格子
+                    const spaceEl = document.createElement('div');
+                    spaceEl.className = 'selected-letter';
+                    spaceEl.textContent = ''; // 不顯示任何符號
+                    
+                    // 點擊空格格子可退回下方
+                    spaceEl.addEventListener('click', () => {
+                        item.element.style.display = 'flex';
+                        selectedLetters = selectedLetters.filter(l => l !== item);
+                        updateSelectedLetters();
+                        phonicsEl.classList.remove('show');
+                    });
+                    selectedLettersEl.appendChild(spaceEl);
+                } else {
+                    // 普通字母加入當前單字組
+                    const letterEl = document.createElement('div');
+                    letterEl.className = 'selected-letter';
+                    letterEl.textContent = item.letter;
+                    letterEl.addEventListener('click', () => {
+                        item.element.style.display = 'flex';
+                        selectedLetters = selectedLetters.filter(l => l !== item);
+                        updateSelectedLetters();
+                        phonicsEl.classList.remove('show');
+                    });
+                    currentWordGroup.appendChild(letterEl);
+                }
             });
+            
+            // 加入最後一個單字組
+            if (currentWordGroup.children.length > 0) {
+                selectedLettersEl.appendChild(currentWordGroup);
+            }
         }
 
         function checkWord() {
@@ -762,7 +813,6 @@
                 else alert("目前沒有單字記錄！");
             });
             
-            // 【關鍵修正 5】點擊 Input 按鈕時，立即解鎖語音權限
             inputBtn.addEventListener('click', () => {
                 unlockSpeech(); 
                 fileInput.click();
