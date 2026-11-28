@@ -183,8 +183,8 @@
         speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang;
-        utterance.rate = isChinese ? 0.9 : 0.85;
-        utterance.pitch = isChinese ? 0.8 : 1;
+        utterance.rate = isChinese ? 0.8 : 0.85;
+        utterance.pitch = isChinese ? 0.9 : 1;
         utterance.volume = 1;
         if (voice) utterance.voice = voice;
         speechSynthesis.speak(utterance);
